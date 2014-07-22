@@ -57,6 +57,9 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import static android.content.Context.CAMERA_SERVICE;
@@ -105,6 +108,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TimeZone;
 
 import static android.content.Context.CAMERA_SERVICE;
 
@@ -236,7 +240,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
         mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture);
         mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
         view.findViewById(R.id.picture).setOnClickListener(this);
-        view.findViewById(R.id.info).setOnClickListener(this);
+        //view.findViewById(R.id.info).setOnClickListener(this);
     }
 
     @SuppressLint("Override")
@@ -440,7 +444,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
 
             // We use an ImageReader to get a JPEG from CameraDevice.
             // Here, we create a new ImageReader and prepare its Surface as an output from camera.
-            ImageReader reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
+            ImageReader reader = ImageReader.newInstance(width, height, ImageFormat.RAW_SENSOR, 1);
             List<Surface> outputSurfaces = new ArrayList<Surface>(2);
             outputSurfaces.add(reader.getSurface());
             outputSurfaces.add(new Surface(mTextureView.getSurfaceTexture()));
@@ -457,7 +461,24 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation));
 
             // Output file
-            final File file = new File(activity.getExternalFilesDir(null), "pic.jpg");
+            Calendar c = Calendar.getInstance();
+            System.out.println("current: "+c.getTime());
+
+            TimeZone z = c.getTimeZone();
+            int offset = z.getRawOffset();
+            if(z.inDaylightTime(new Date())){
+                offset = offset + z.getDSTSavings();
+            }
+            int offsetHrs = offset / 1000 / 60 / 60;
+            int offsetMins = offset / 1000 / 60 % 60;
+
+            System.out.println("offset: " + offsetHrs);
+            System.out.println("offset: " + offsetMins);
+
+            c.add(Calendar.HOUR_OF_DAY, (-offsetHrs));
+            c.add(Calendar.MINUTE, (-offsetMins));
+
+            final File file = new File(activity.getExternalFilesDir(null),c.getTime()+ ".jpg");
 
             // This listener is called when a image is ready in ImageReader
             ImageReader.OnImageAvailableListener readerListener =
@@ -548,13 +569,13 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
                 takePicture();
                 break;
             }
-            case R.id.info: {
+            /*case R.id.info: {
                 Activity activity = getActivity();
                 if (null != activity) {
 
                 }
                 break;
-            }
+            }*/
         }
     }
 
