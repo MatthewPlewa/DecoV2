@@ -41,6 +41,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Range;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
@@ -112,6 +113,8 @@ import java.util.List;
 import java.util.TimeZone;
 
 import static android.content.Context.CAMERA_SERVICE;
+import static android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE;
+import static java.lang.Long.valueOf;
 
 public class Camera2BasicFragment extends Fragment implements View.OnClickListener {
 
@@ -431,7 +434,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
                     manager.getCameraCharacteristics(mCameraDevice.getId());
             if (characteristics != null) {
 
-                Toast.makeText(activity,characteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE)+"",Toast.LENGTH_LONG).show();
+                Toast.makeText(activity,characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE)+"",Toast.LENGTH_LONG).show();
             }
 
             Size[] jpegSizes = null;
@@ -453,12 +456,14 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
             List<Surface> outputSurfaces = new ArrayList<Surface>(2);
             outputSurfaces.add(reader.getSurface());
             outputSurfaces.add(new Surface(mTextureView.getSurfaceTexture()));
+            
 
             // This is the CaptureRequest.Builder that we use to take a picture.
             final CaptureRequest.Builder captureBuilder =
                     mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
             captureBuilder.addTarget(reader.getSurface());
-            captureBuilder.set(characteristics.);
+            captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,CaptureRequest.CONTROL_AE_MODE_OFF);
+            captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, new Long(valueOf((long)80000000)));
             setUpCaptureRequestBuilder(captureBuilder);
 
             // Orientation
