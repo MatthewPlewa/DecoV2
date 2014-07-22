@@ -478,7 +478,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
             c.add(Calendar.HOUR_OF_DAY, (-offsetHrs));
             c.add(Calendar.MINUTE, (-offsetMins));
 
-            final File file = new File(activity.getExternalFilesDir(null),c.getTime()+ ".jpg");
+            final File file = new File(activity.getExternalFilesDir(null),c.getTime()+ ".RAW");
 
             // This listener is called when a image is ready in ImageReader
             ImageReader.OnImageAvailableListener readerListener =
