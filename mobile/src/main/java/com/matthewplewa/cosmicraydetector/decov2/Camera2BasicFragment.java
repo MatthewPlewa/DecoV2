@@ -112,12 +112,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import static android.content.Context.CAMERA_SERVICE;
-import static android.graphics.ImageFormat.JPEG;
 import static android.graphics.ImageFormat.RAW_SENSOR;
-import static android.hardware.camera2.CameraCharacteristics.JPEG_AVAILABLE_THUMBNAIL_SIZES;
-import static android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE;
-import static android.hardware.camera2.CameraMetadata.CONTROL_AE_MODE_OFF;
-import static android.hardware.camera2.CameraMetadata.NOISE_REDUCTION_MODE_OFF;
 
 public class Camera2BasicFragment extends Fragment implements View.OnClickListener {
 
@@ -423,10 +418,6 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
     /**
      * Takes a picture.
      */
-
-
-
-
     private void takePicture() {
         try {
             final Activity activity = getActivity();
@@ -444,11 +435,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
             if (characteristics != null) {
                 jpegSizes = characteristics
                         .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                        .getOutputSizes(JPEG);
-            }
-            if (characteristics != null) {
-
-                Toast.makeText(activity,characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE)+"",Toast.LENGTH_LONG).show();
+                        .getOutputSizes(RAW_SENSOR);
             }
             int width = 640;
             int height = 480;
@@ -459,7 +446,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
 
             // We use an ImageReader to get a JPEG from CameraDevice.
             // Here, we create a new ImageReader and prepare its Surface as an output from camera.
-            ImageReader reader = ImageReader.newInstance(width, height, JPEG, 1);
+            ImageReader reader = ImageReader.newInstance(width, height, RAW_SENSOR, 1);
             List<Surface> outputSurfaces = new ArrayList<Surface>(2);
             outputSurfaces.add(reader.getSurface());
             outputSurfaces.add(new Surface(mTextureView.getSurfaceTexture()));
@@ -468,10 +455,6 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
             final CaptureRequest.Builder captureBuilder =
                     mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
             captureBuilder.addTarget(reader.getSurface());
-            //captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CONTROL_AE_MODE_OFF);
-            //captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME , (long)2000000 );
-            //captureBuilder.set(CaptureRequest.NOISE_REDUCTION_MODE, NOISE_REDUCTION_MODE_OFF);
-
 
             setUpCaptureRequestBuilder(captureBuilder);
 
@@ -497,7 +480,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
             c.add(Calendar.HOUR_OF_DAY, (-offsetHrs));
             c.add(Calendar.MINUTE, (-offsetMins));
 
-            final File file = new File(Environment.getExternalStorageDirectory(),"DECO/"+c.getTime()+ ".jpg");
+            final File file = new File(Environment.getExternalStorageDirectory(),"DECO/"+c.getTime()+ ".RAW");
 
             // This listener is called when a image is ready in ImageReader
             ImageReader.OnImageAvailableListener readerListener =
@@ -596,10 +579,6 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
                 break;
             }*/
         }
-    }
-
-    public Camera2BasicFragment(){
-
     }
 
 }
