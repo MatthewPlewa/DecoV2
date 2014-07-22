@@ -38,7 +38,7 @@ public class ProcessorThread extends Thread {
         }
 
         while (go==true){
-            Camera2BasicFragment runner = new Camera2BasicFragment();
+            //Camera2BasicFragment runner = new Camera2BasicFragment();
             //runner.takePicture();
 
             try {
