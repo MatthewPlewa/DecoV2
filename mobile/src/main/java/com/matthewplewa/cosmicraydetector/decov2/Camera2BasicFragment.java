@@ -38,6 +38,7 @@ import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Size;
@@ -111,6 +112,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import static android.content.Context.CAMERA_SERVICE;
+import static android.graphics.ImageFormat.RAW_SENSOR;
 
 public class Camera2BasicFragment extends Fragment implements View.OnClickListener {
 
@@ -433,7 +435,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
             if (characteristics != null) {
                 jpegSizes = characteristics
                         .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                        .getOutputSizes(ImageFormat.JPEG);
+                        .getOutputSizes(RAW_SENSOR);
             }
             int width = 640;
             int height = 480;
@@ -444,7 +446,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
 
             // We use an ImageReader to get a JPEG from CameraDevice.
             // Here, we create a new ImageReader and prepare its Surface as an output from camera.
-            ImageReader reader = ImageReader.newInstance(width, height, ImageFormat.RAW_SENSOR, 1);
+            ImageReader reader = ImageReader.newInstance(width, height, RAW_SENSOR, 1);
             List<Surface> outputSurfaces = new ArrayList<Surface>(2);
             outputSurfaces.add(reader.getSurface());
             outputSurfaces.add(new Surface(mTextureView.getSurfaceTexture()));
@@ -478,7 +480,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
             c.add(Calendar.HOUR_OF_DAY, (-offsetHrs));
             c.add(Calendar.MINUTE, (-offsetMins));
 
-            final File file = new File(activity.getExternalFilesDir(null),c.getTime()+ ".RAW");
+            final File file = new File(Environment.getExternalStorageDirectory(),"DECO/"+c.getTime()+ ".RAW");
 
             // This listener is called when a image is ready in ImageReader
             ImageReader.OnImageAvailableListener readerListener =
