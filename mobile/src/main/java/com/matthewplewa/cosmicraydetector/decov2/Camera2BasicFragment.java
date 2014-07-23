@@ -41,6 +41,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
+import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
@@ -435,6 +436,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
             Long exposure =characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE).getUpper();//gets the upper exposure time suported by the camera object
             exposure = exposure - Long.valueOf((long)100000);//reduces the exposure slightly inorder to prevent errors.
+            Log.i("tag", characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE) + "");
             Size[] jpegSizes = null;
             if (characteristics != null) {
                 jpegSizes = characteristics
@@ -463,7 +465,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,CONTROL_AE_MODE_OFF);
             captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, exposure);
             captureBuilder.set(CaptureRequest.NOISE_REDUCTION_MODE,CaptureRequest.NOISE_REDUCTION_MODE_OFF);
-            captureBuilder.set(CaptureRequest.JPEG_QUALITY, Byte.valueOf(90+""));
+            captureBuilder.set(CaptureRequest.JPEG_QUALITY, Byte.valueOf(100+""));
 
             captureBuilder.addTarget(reader.getSurface());
 
@@ -505,6 +507,8 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                                 byte[] bytes = new byte[buffer.capacity()];
                                 buffer.get(bytes);
                                 save(bytes);
+                                reader.close();//added because it seems to be wanting to overload the reader
+
                             } catch (FileNotFoundException e) {
                                 e.printStackTrace();
                             } catch (IOException e) {
@@ -598,8 +602,9 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                 if (go == false) {
 
                     go = true;
+                    Toast.makeText(getActivity(),"Starting Data Collection",Toast.LENGTH_LONG).show();
                     if(running==0) {
-                        Toast.makeText(getActivity(),"Starting Data Collection",Toast.LENGTH_LONG).show();
+
                         runner.start();
                         running=1;
                     }
