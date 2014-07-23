@@ -18,7 +18,6 @@ package com.matthewplewa.cosmicraydetector.decov2;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.res.Configuration;
@@ -41,7 +40,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.util.Range;
+import android.os.Looper;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
@@ -49,7 +48,6 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Toast;
 
 import java.io.File;
@@ -62,63 +60,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 import static android.content.Context.CAMERA_SERVICE;
 
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Fragment;
-import android.content.Context;
-import android.content.res.Configuration;
-import android.graphics.ImageFormat;
-import android.graphics.Matrix;
-import android.graphics.RectF;
-import android.graphics.SurfaceTexture;
 
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCaptureSession;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraDevice;
-import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CameraMetadata;
-import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.TotalCaptureResult;
-import android.hardware.camera2.params.StreamConfigurationMap;
-import android.media.Image;
-import android.media.ImageReader;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.util.Size;
-import android.util.SparseIntArray;
-import android.view.LayoutInflater;
-import android.view.Surface;
-import android.view.TextureView;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Toast;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.TimeZone;
 
-import static android.content.Context.CAMERA_SERVICE;
+
 import static android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE;
 import static android.hardware.camera2.CameraMetadata.CONTROL_AE_MODE_OFF;
-import static java.lang.Long.valueOf;
 
-public class Camera2BasicFragment extends Fragment implements View.OnClickListener {
+
+public class Camera2BasicFragment extends Fragment  implements View.OnClickListener  {
 
     /**
      * Conversion from screen rotation to JPEG orientation.
@@ -131,6 +86,9 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
         ORIENTATIONS.append(Surface.ROTATION_180, 270);
         ORIENTATIONS.append(Surface.ROTATION_270, 180);
     }
+
+
+
 
     /**
      * An {@link AutoFitTextureView} for camera preview.
@@ -152,6 +110,8 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
      */
     private CameraDevice mCameraDevice;
 
+
+    private boolean go=false;
     /**
      * {@link android.view.TextureView.SurfaceTextureListener} handles several lifecycle events on a
      * {@link android.view.TextureView}.
@@ -205,6 +165,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
             mCameraDevice = cameraDevice;
             startPreview();
             mOpeningCamera = false;
+
         }
 
         @Override
@@ -216,6 +177,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
 
         @Override
         public void onError(CameraDevice cameraDevice, int error) {
+
             cameraDevice.close();
             mCameraDevice = null;
             Activity activity = getActivity();
@@ -425,7 +387,40 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
     /**
      * Takes a picture.
      */
-    private void takePicture() {
+
+    int preped=0;
+    Runnable runable = new Runnable() {
+        @Override
+        public void run() {
+            boolean tr = true;
+            while (tr) {
+                while (!go) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                while (go) {
+                    if (preped == 0) {
+                        Looper.prepare();
+                        preped = 1;
+                    }
+                    startPreview();
+                    takePicture();
+                    //Toast.makeText(getActivity(),"Took Picture",Toast.LENGTH_SHORT).show();
+                    try {
+                        Thread.sleep(2000);// need to make this listen for the picture to be taken
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    };
+
+
+    public void takePicture() {
         try {
             final Activity activity = getActivity();
             if (null == activity || null == mCameraDevice) {
@@ -437,12 +432,9 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
             // Pick the best JPEG size that can be captured with this CameraDevice.
             CameraCharacteristics characteristics =
                     manager.getCameraCharacteristics(mCameraDevice.getId());
-            if (characteristics != null) {
 
-                Toast.makeText(activity,characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE)+"",Toast.LENGTH_LONG).show();
-            }
             Long exposure =characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE).getUpper();//gets the upper exposure time suported by the camera object
-            exposure = exposure - Long.valueOf((long)1000000);//reduces the exposure slightly inorder to prevent errors.
+            exposure = exposure - Long.valueOf((long)100000);//reduces the exposure slightly inorder to prevent errors.
             Size[] jpegSizes = null;
             if (characteristics != null) {
                 jpegSizes = characteristics
@@ -470,8 +462,8 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
                     mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
             captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,CONTROL_AE_MODE_OFF);
             captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, exposure);
-           // captureBuilder.set(CaptureRequest.SENSOR_SENSITIVITY,characteristics.get(characteristics.SENSOR_INFO_SENSITIVITY_RANGE).getUpper() );
-            captureBuilder.set(CaptureRequest.JPEG_QUALITY, new Byte(80+""));
+            captureBuilder.set(CaptureRequest.NOISE_REDUCTION_MODE,CaptureRequest.NOISE_REDUCTION_MODE_OFF);
+            captureBuilder.set(CaptureRequest.JPEG_QUALITY, Byte.valueOf(90+""));
 
             captureBuilder.addTarget(reader.getSurface());
 
@@ -532,6 +524,8 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
                             } finally {
                                 if (null != output) {
                                     output.close();
+                                    //startPreview();
+
                                 }
                             }
                         }
@@ -553,7 +547,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
                         public void onCaptureCompleted(CameraCaptureSession session,
                                                        CaptureRequest request,
                                                        TotalCaptureResult result) {
-                            Toast.makeText(activity, "Saved: " + file, Toast.LENGTH_SHORT).show();
+                           // Toast.makeText(activity, "Saved: " + file, Toast.LENGTH_SHORT).show();
                             // We restart the preview when the capture is completed
 
                             //startPreview();
@@ -586,18 +580,46 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
+
     }
 
+
+    Thread runner = new Thread(runable);
+
+
+
+    int running =0;
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.picture: {
-                takePicture();
+
+                }
+                if (go == false) {
+
+                    go = true;
+                    if(running==0) {
+                        Toast.makeText(getActivity(),"Starting Data Collection",Toast.LENGTH_LONG).show();
+                        runner.start();
+                        running=1;
+                    }
+                }
+                else if (go==true){
+                    go=false;
+                    Toast.makeText(getActivity(),"Stopped",Toast.LENGTH_LONG).show();
+
+                }
+
                 break;
+
             }
 
         }
-    }
+
+
+
+
+
 
 }
 
