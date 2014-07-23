@@ -49,6 +49,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Toast;
 
 import java.io.File;
@@ -114,6 +115,7 @@ import java.util.TimeZone;
 
 import static android.content.Context.CAMERA_SERVICE;
 import static android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE;
+import static android.hardware.camera2.CameraMetadata.CONTROL_AE_MODE_OFF;
 import static java.lang.Long.valueOf;
 
 public class Camera2BasicFragment extends Fragment implements View.OnClickListener {
@@ -380,12 +382,15 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
     private void setUpCaptureRequestBuilder(CaptureRequest.Builder builder) {
         // In this sample, we just let the camera device pick the automatic settings.
         builder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
-        Long time =  (long) 90000;
-        builder.set(CaptureRequest.SENSOR_EXPOSURE_TIME , time);
-        //builder.set(CaptureRequest.NOISE_REDUCTION_MODE,CameraMetadata.NOISE_REDUCTION_MODE_OFF);
+
         //builder.set(CaptureRequest.)
     }
+    private void setUpCaptureRequestBuilder2(CaptureRequest.Builder builder) {
+        // In this sample, we just let the camera device pick the automatic settings.
+        builder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_OFF);
 
+        //builder.set(CaptureRequest.)
+    }
     /**
      * Configures the necessary {@link android.graphics.Matrix} transformation to `mTextureView`.
      * This method should be called after the camera preview size is determined in openCamera and
@@ -436,7 +441,8 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
 
                 Toast.makeText(activity,characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE)+"",Toast.LENGTH_LONG).show();
             }
-
+            Long exposure =characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE).getUpper();//gets the upper exposure time suported by the camera object
+            exposure = exposure - Long.valueOf((long)1000000);//reduces the exposure slightly inorder to prevent errors.
             Size[] jpegSizes = null;
             if (characteristics != null) {
                 jpegSizes = characteristics
@@ -452,19 +458,24 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
 
             // We use an ImageReader to get a JPEG from CameraDevice.
             // Here, we create a new ImageReader and prepare its Surface as an output from camera.
-            ImageReader reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
+            ImageReader reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 2);
             List<Surface> outputSurfaces = new ArrayList<Surface>(2);
             outputSurfaces.add(reader.getSurface());
             outputSurfaces.add(new Surface(mTextureView.getSurfaceTexture()));
-            
+
+
 
             // This is the CaptureRequest.Builder that we use to take a picture.
             final CaptureRequest.Builder captureBuilder =
                     mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+            captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,CONTROL_AE_MODE_OFF);
+            captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, exposure);
+           // captureBuilder.set(CaptureRequest.SENSOR_SENSITIVITY,characteristics.get(characteristics.SENSOR_INFO_SENSITIVITY_RANGE).getUpper() );
+            captureBuilder.set(CaptureRequest.JPEG_QUALITY, new Byte(80+""));
+
             captureBuilder.addTarget(reader.getSurface());
-            captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,CaptureRequest.CONTROL_AE_MODE_OFF);
-            captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, new Long(valueOf((long)80000000)));
-            setUpCaptureRequestBuilder(captureBuilder);
+
+            setUpCaptureRequestBuilder2(captureBuilder);
 
             // Orientation
             int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
@@ -544,7 +555,12 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
                                                        TotalCaptureResult result) {
                             Toast.makeText(activity, "Saved: " + file, Toast.LENGTH_SHORT).show();
                             // We restart the preview when the capture is completed
-                            startPreview();
+
+                            //startPreview();
+                            /*
+                            when starting the preview there i rna into major issues with it trying to take a photo and trying to start the preview at the same time.
+                            It is unknown why this occures and shouldnt happen with the new api so it is assumed to be a bug in the os. Preview wont mean much to us but its kinda annoying!
+                             */
                         }
 
                     };
@@ -579,13 +595,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
                 takePicture();
                 break;
             }
-            /*case R.id.info: {
-                Activity activity = getActivity();
-                if (null != activity) {
 
-                }
-                break;
-            }*/
         }
     }
 
