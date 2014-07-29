@@ -119,6 +119,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
     ImageReader reader;
     List<Surface> outputSurfaces;
     TimeZone z;
+    Activity activity=getActivity();
 
     CaptureRequest.Builder captureBuilder;
     Handler backgroundHandler;
@@ -170,13 +171,15 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    if (preped == 0) {
+                    if (preped == 0) {//the looper has to be prepared before you can start the looper that is in the takePicture() method
                         Looper.prepare();
                         preped = 1;
                     }
-
-                    startPreview();
-                    takePicture();
+                    /*
+                    this is where all of the work is started in the thread.
+                     */
+                    startPreview();//start the preview here because take picture requires a running preview
+                    takePicture();//starts the image on the main thread NOT this thread.
 
 
 
@@ -459,6 +462,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
 
 
+
         try {
             final Activity activity = getActivity();
             if (null == activity || null == mCameraDevice) {
@@ -543,17 +547,18 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                             go=true;
 
                             try {
+
                                 image = reader.acquireLatestImage();
+
                                 buffer = image.getPlanes()[0].getBuffer();
                                 bytes = new byte[buffer.capacity()];
                                 buffer.get(bytes);
                                 save(bytes);
                                 Log.i("tag","saved image");
                                 done++;
-                                if(done%5==0)
-                                    Toast.makeText(getActivity(),"Captured "+done,Toast.LENGTH_SHORT).show();
 
-                                buffer.clear();//try to fix the bugger abandonding
+
+                                buffer.clear();//try to fix the buffer abandonding
                                 buffer=null;
                                 image.close();
 
@@ -561,8 +566,8 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                                 surface.release();
                                 surface=null;
                                 Log.i("tag","surface released");
-                                //reader.close();//added because it seems to be wanting to overload the reader.
-                                //c.clear();
+                                reader.close();//added because it seems to be wanting to overload the reader.
+                                c.clear();
 
                             } catch (FileNotFoundException e) {
                                 e.printStackTrace();
@@ -601,8 +606,10 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
             if(thread!=null)
                 thread.quit();
+
             thread = new HandlerThread("CameraPicture");
             thread.start();
+
             backgroundHandler = new Handler(thread.getLooper());
             reader.setOnImageAvailableListener(readerListener, backgroundHandler);
 
@@ -616,7 +623,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                         public void onCaptureCompleted(CameraCaptureSession session,
                                                        CaptureRequest request,
                                                        TotalCaptureResult result) {
-                           // Toast.makeText(activity, "Saved: " + file, Toast.LENGTH_SHORT).show();
+                         //  Toast.makeText(activity, "Saved: " + file, Toast.LENGTH_SHORT).show();
                             // We restart the preview when the capture is completed
 
                             //startPreview();
