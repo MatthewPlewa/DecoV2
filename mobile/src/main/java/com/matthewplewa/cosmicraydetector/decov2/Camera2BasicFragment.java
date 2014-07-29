@@ -726,7 +726,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                 Toast.makeText(getActivity(),"Stopped",Toast.LENGTH_LONG).show();
                 textStatus.setText("STOPPED");
                 textStatus.setTextColor(Color.RED);
-
+///////////asdf//asdf/asdf//dsfa
             }
 
             break;
