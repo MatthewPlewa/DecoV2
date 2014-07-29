@@ -198,7 +198,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
         Runnable runnable = new Runnable() {
             private long startTime = System.currentTimeMillis();
             public void run() {
-               boolean keep = true;
+                boolean keep = true;
                 while (keep) {
                     try {
                         Thread.sleep(1000);
