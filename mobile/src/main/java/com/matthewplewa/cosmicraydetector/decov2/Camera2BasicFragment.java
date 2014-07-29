@@ -26,7 +26,6 @@ import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
-import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -53,26 +52,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.annotation.Target;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-
 import static android.content.Context.CAMERA_SERVICE;//made my life easier....
-import android.view.*;
-
-
-import static android.content.Context.CAMERA_SERVICE;
-
 
 
 
@@ -99,10 +90,10 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
     SurfaceTexture texture;
 
- /*
-    I cannot seem to find where these ojects are being created saying open that is causing the "too many files open" error, so I am just going
-    to move all of the file declorations to outside the take picture method.
-     */
+    /*
+       I cannot seem to find where these ojects are being created saying open that is causing the "too many files open" error, so I am just going
+       to move all of the file declorations to outside the take picture method.
+        */
     int preped=0;
     boolean run=false;
     int done=0;
@@ -127,8 +118,8 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
     List<Surface> outputSurfaces;
     TimeZone z;
     Activity activity=getActivity();
-    public TextView textImgsDone;
-    public TextView textStatus;
+    TextView textImgsDone;
+    TextView textStatus;
 
     CaptureRequest.Builder captureBuilder;
     Handler backgroundHandler;
@@ -153,7 +144,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
      */
     private CameraDevice mCameraDevice;
     private boolean go=false;
-    protected Runnable runable = new Runnable() {
+    Runnable runable = new Runnable() {
 
         boolean take;
         public void setbool(boolean b){
@@ -161,7 +152,6 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
         }
         @Override
         public void run() {
-
 
             boolean tr = true;
             while (tr) {
@@ -190,17 +180,44 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                      */
                     startPreview();//start the preview here because take picture requires a running preview
                     takePicture();//starts the image on the main thread NOT this thread.
-                    getActivity().runOnUiThread(new Runnable() {
-                        public void run() {
-                          //  textImgsDone.setText(done + "");
-                        }
 
-                    });
+
+
+
+
+
+
                 }
             }
         }
     };
     Thread runner = new Thread(runable);
+
+    private void startUiUpdateThread() {
+        final Handler handler = new Handler();
+        Runnable runnable = new Runnable() {
+            private long startTime = System.currentTimeMillis();
+            public void run() {
+               boolean keep = true;
+                while (keep) {
+                    try {
+                        Thread.sleep(1000);
+                    }
+                    catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    handler.post(new Runnable(){
+                        public void run() {
+                            textImgsDone.setText(done+"");
+                        }
+                    });
+                }
+            }
+        };
+        new Thread(runnable).start();
+    }
+
+
     /**
      * {@link android.view.TextureView.SurfaceTextureListener} handles several lifecycle events on a
      * {@link android.view.TextureView}.
@@ -284,7 +301,6 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
     @SuppressLint("Override")
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         return inflater.inflate(R.layout.fragment_camera2_basic, container, false);
     }
 
@@ -293,10 +309,11 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
     public void onViewCreated(final View view, Bundle savedInstanceState) {
         mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture);
         mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
-        //textImgsDone = (TextView)getView().findViewById(R.id.textImgDone);
-        //textStatus = (TextView)getView().findViewById(R.id.textStatus);
-        //textImgsDone.setText(5+"");
+        textImgsDone = (TextView) getView().findViewById(R.id.textDone);
+        textStatus = (TextView ) getView().findViewById(R.id.textStatus);
+
         view.findViewById(R.id.picture).setOnClickListener(this);
+
         //view.findViewById(R.id.info).setOnClickListener(this);
     }
 
@@ -316,10 +333,6 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             mCameraDevice = null;
         }
     }
-
-
-
-
 
     /**
      * Opens a {@link CameraDevice}. The result is listened by `mStateListener`.
@@ -364,7 +377,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             return;
         }
         try {
-             texture = mTextureView.getSurfaceTexture();
+            texture = mTextureView.getSurfaceTexture();
             assert texture != null;
 
             // We configure the size of default buffer to be the size of camera preview we want.
@@ -488,12 +501,12 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             manager =(CameraManager) activity.getSystemService(CAMERA_SERVICE);
 
             // Pick the best JPEG size that can be captured with this CameraDevice.
-             characteristics =
+            characteristics =
                     manager.getCameraCharacteristics(mCameraDevice.getId());
 
-             exposure =characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE).getUpper();//gets the upper exposure time suported by the camera object
-          //  exposure = exposure - Long.valueOf((long)10000);//reduces the exposure slightly inorder to prevent errors. Will try without. seems to be working without
-            Log.i("tag", characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE) + "");
+            exposure =characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE).getUpper();//gets the upper exposure time suported by the camera object
+            //  exposure = exposure - Long.valueOf((long)10000);//reduces the exposure slightly inorder to prevent errors. Will try without. seems to be working without
+            // Log.i("tag", characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE) + "");
             Size[] jpegSizes = null;
             if (characteristics != null) {
                 jpegSizes = characteristics
@@ -509,7 +522,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
             // We use an ImageReader to get a JPEG from CameraDevice.
             // Here, we create a new ImageReader and prepare its Surface as an output from camera.
-             reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 5);
+            reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 5);
             outputSurfaces = new ArrayList<Surface>(5);
             outputSurfaces.add(reader.getSurface());
             outputSurfaces.add(new Surface(mTextureView.getSurfaceTexture()));
@@ -537,103 +550,87 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation));
 
-            Calendar c = Calendar.getInstance();
-            int year = c.get(Calendar.YEAR);
-            int month= c.get(Calendar.MONTH)+1;
-            int day= (c.get(Calendar.DAY_OF_MONTH));
-            int hour= c.get(Calendar.HOUR_OF_DAY);
-            int min= c.get(Calendar.MINUTE);
-            int seconds = c.get(Calendar.SECOND);
+            // Output file
+            c = Calendar.getInstance();
+            //System.out.println("current: "+c.getTime());
 
-            //string convertion
-            String Month = month+"";
-            String Day = day+"";
-            String Hour = hour+"";
-            String Min= min+"";
-            String Seconds = seconds +"";
+            z = c.getTimeZone();
+            offset = z.getRawOffset();
+            if(z.inDaylightTime(new Date())){
+                offset = offset + z.getDSTSavings();
+            }
+            offsetHrs = offset / 1000 / 60 / 60;
+            offsetMins = offset / 1000 / 60 % 60;
 
+            //System.out.println("offset: " + offsetHrs);
+            //System.out.println("offset: " + offsetMins);
 
-            //keeps it in the correct formate
-            if(month<10)
-                Month = "0"+ month;
-            if(day<10)
-                Day = "0"+day;
-            if(hour <10)
-                Hour = "0"+hour;
-            if(min<10)
-                Min="0"+min;
-            if(seconds <10)
-                Seconds = "0"+seconds;
+            c.add(Calendar.HOUR_OF_DAY, (-offsetHrs));
+            c.add(Calendar.MINUTE, (-offsetMins));
 
-
-
-
-            //setting formate for file name
-            String pic =""+ year+Month+Day+"_"+Hour+Min+Seconds;
-
-           file = new File(Environment.getExternalStorageDirectory(),"DECO/"+pic+ ".jpg");
+            file = new File(Environment.getExternalStorageDirectory(),"DECO/"+c.getTime()+ ".jpg");
 
             // This listener is called when a image is ready in ImageReader
             readerListener = new ImageReader.OnImageAvailableListener() {
-                        @Override
-                        public void onImageAvailable(ImageReader reader) {
-                            go=true;
+                @Override
+                public void onImageAvailable(ImageReader reader) {
+                    go=true;
 
-                            try {
+                    try {
 
-                                image = reader.acquireLatestImage();
+                        image = reader.acquireLatestImage();
 
-                                buffer = image.getPlanes()[0].getBuffer();
-                                bytes = new byte[buffer.capacity()];
-                                buffer.get(bytes);
-                                save(bytes);
-                                Log.i("tag","saved image");
-                                done++;
-
-
-                                buffer.clear();//try to fix the buffer abandonding
-                                buffer=null;
-                                image.close();
+                        buffer = image.getPlanes()[0].getBuffer();
+                        bytes = new byte[buffer.capacity()];
+                        buffer.get(bytes);
+                        save(bytes);
+                        Log.i("tag","saved image");
+                        done++;
 
 
-                                surface.release();
-                                surface=null;
-                                Log.i("tag","surface released");
-                                reader.close();//added because it seems to be wanting to overload the reader.
+                        buffer.clear();//try to fix the buffer abandonding
+                        buffer=null;
+                        image.close();
 
 
-                            } catch (FileNotFoundException e) {
-                                e.printStackTrace();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            } finally {
-                                if (image != null) {
+                        surface.release();
+                        surface=null;
+                        Log.i("tag","surface released");
+                        reader.close();//added because it seems to be wanting to overload the reader.
+                        c.clear();
+
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } finally {
+                        if (image != null) {
 
 
 
-                                    Log.i("tag",done+"");
-                                }
-                            }
+                            Log.i("tag",done+"");
                         }
+                    }
+                }
 
-                        private void save(byte[] bytes) throws IOException {
+                private void save(byte[] bytes) throws IOException {
 
-                            try {
-                                output = new FileOutputStream(file);
-                                output.write(bytes);
-                                output.flush();
-                                output.close();
-                                output=null;
+                    try {
+                        output = new FileOutputStream(file);
+                        output.write(bytes);
+                        output.flush();
+                        output.close();
+                        output=null;
 
-                            } finally {
-                                if (null != output) {
-                                    //utput.close();
-                                    //startPreview();
+                    } finally {
+                        if (null != output) {
+                            //utput.close();
+                            //startPreview();
 
-                                }
-                            }
                         }
-                    };
+                    }
+                }
+            };
 
             // We create a Handler since we want to handle the result JPEG in a background thread
 
@@ -649,14 +646,14 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             // This listener is called when the capture is completed.
             // Note that the JPEG data is not available in this listener, but in the
             // ImageReader.OnImageAvailableListener we created above.
-             captureListener =
+            captureListener =
                     new CameraCaptureSession.CaptureListener() {
 
                         @Override
                         public void onCaptureCompleted(CameraCaptureSession session,
                                                        CaptureRequest request,
                                                        TotalCaptureResult result) {
-                         //  Toast.makeText(activity, "Saved: " + file, Toast.LENGTH_SHORT).show();
+                            //  Toast.makeText(activity, "Saved: " + file, Toast.LENGTH_SHORT).show();
                             // We restart the preview when the capture is completed
 
                             //startPreview();
@@ -707,33 +704,35 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
         switch (view.getId()) {
             case R.id.picture: {
 
-                }
-                if (run == false) {
-                    //textStatus.setText("Running");
-                    //textStatus.setTextColor(Color.GREEN);
-                    if(!go)
-                        go=true;
-                    run = true;
-                    Toast.makeText(getActivity(),"Starting Data Collection",Toast.LENGTH_LONG).show();
-                    if(running==0) {
+            }
+            if (run == false) {
+                if(!go)
+                    go=true;
 
-                        runner.start();
-                        running=1;
-                    }
-                }
-                else if (run==true){
-                    //textStatus.setText("STOPPED");
-                    //textStatus.setTextColor(Color.RED);
-                    run=false;
-                    Toast.makeText(getActivity(),"Stopped",Toast.LENGTH_LONG).show();
+                run = true;
 
-                }
+                textStatus.setText("Running");
+                textStatus.setTextColor(Color.GREEN);
+                Toast.makeText(getActivity(),"Starting Data Collection",Toast.LENGTH_LONG).show();
+                if(running==0) {
 
-                break;
+                    runner.start();
+                    startUiUpdateThread();
+                    running=1;
+                }
+            }
+            else if (run==true){
+                run=false;
+                Toast.makeText(getActivity(),"Stopped",Toast.LENGTH_LONG).show();
+                textStatus.setText("STOPPED");
+                textStatus.setTextColor(Color.RED);
 
             }
 
+            break;
+
         }
 
-}
+    }
 
+}
