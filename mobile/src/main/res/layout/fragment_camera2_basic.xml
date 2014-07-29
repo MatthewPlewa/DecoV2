@@ -26,26 +26,47 @@
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="75dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true"
-        android:layout_below="@id/texture"
         android:background="#4285f4">
 
         <Button
             android:id="@+id/picture"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="35dp"
             android:layout_gravity="center"
             android:text="@string/picture" />
 
+        <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:keepScreenOn="true"
+            android:layout_gravity="right|center_vertical">
+            ...
+
+            <TextView
+                android:layout_width="100dp"
+                android:layout_height="50dp"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="1"
+                android:id="@+id/textView"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="88dp"
+                android:textColor="#ffffffff"
+                android:textAlignment="center" />
+        </RelativeLayout>
 
 
     </FrameLayout>
+<<<<<<< HEAD
     <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:keepScreenOn="true">
 
     </RelativeLayout>
+=======
+>>>>>>> parent of 871c61e... Revert "adjusting some of the properties"
 </RelativeLayout>
