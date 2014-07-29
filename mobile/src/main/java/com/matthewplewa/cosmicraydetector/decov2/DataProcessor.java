@@ -5,6 +5,8 @@ package com.matthewplewa.cosmicraydetector.decov2;
  */
 
 import java.io.IOException;
+
+import android.media.Image;
 import android.util.Log;
 
 public class DataProcessor extends Thread {
@@ -25,7 +27,7 @@ public class DataProcessor extends Thread {
         private static boolean go=false;
 
 
-        public void setImage(){
+        public void setImage(Image img){
 
         }
 
