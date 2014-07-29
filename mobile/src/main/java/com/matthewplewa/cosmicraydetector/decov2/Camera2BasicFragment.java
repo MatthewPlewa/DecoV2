@@ -26,6 +26,7 @@ import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
+import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -52,19 +53,27 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.annotation.Target;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+
 import static android.content.Context.CAMERA_SERVICE;//made my life easier....
 import android.view.*;
+
+
+import static android.content.Context.CAMERA_SERVICE;
+
+
 
 
 import java.util.TimeZone;
@@ -183,7 +192,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                     takePicture();//starts the image on the main thread NOT this thread.
                     getActivity().runOnUiThread(new Runnable() {
                         public void run() {
-                            textImgsDone.setText(done + "");
+                          //  textImgsDone.setText(done + "");
                         }
 
                     });
@@ -286,7 +295,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
         mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
         //textImgsDone = (TextView)getView().findViewById(R.id.textImgDone);
         //textStatus = (TextView)getView().findViewById(R.id.textStatus);
-        textImgsDone.setText(5+"");
+        //textImgsDone.setText(5+"");
         view.findViewById(R.id.picture).setOnClickListener(this);
         //view.findViewById(R.id.info).setOnClickListener(this);
     }
@@ -484,7 +493,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
              exposure =characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE).getUpper();//gets the upper exposure time suported by the camera object
           //  exposure = exposure - Long.valueOf((long)10000);//reduces the exposure slightly inorder to prevent errors. Will try without. seems to be working without
-           // Log.i("tag", characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE) + "");
+            Log.i("tag", characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE) + "");
             Size[] jpegSizes = null;
             if (characteristics != null) {
                 jpegSizes = characteristics
@@ -700,8 +709,8 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
                 }
                 if (run == false) {
-                    textStatus.setText("Running");
-                    textStatus.setTextColor(Color.GREEN);
+                    //textStatus.setText("Running");
+                    //textStatus.setTextColor(Color.GREEN);
                     if(!go)
                         go=true;
                     run = true;
@@ -713,8 +722,8 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                     }
                 }
                 else if (run==true){
-                    textStatus.setText("STOPPED");
-                    textStatus.setTextColor(Color.RED);
+                    //textStatus.setText("STOPPED");
+                    //textStatus.setTextColor(Color.RED);
                     run=false;
                     Toast.makeText(getActivity(),"Stopped",Toast.LENGTH_LONG).show();
 
