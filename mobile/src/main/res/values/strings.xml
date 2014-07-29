@@ -16,4 +16,5 @@
 <resources>
     <string name="picture">Start</string>
     <string name="description_info">Info</string>
+    <string name="imgsdone">1</string>
 </resources>
