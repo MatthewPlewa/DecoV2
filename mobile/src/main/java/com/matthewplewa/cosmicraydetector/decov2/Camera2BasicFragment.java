@@ -202,7 +202,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                 boolean keep = true;
                 while (keep) {
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(10000);
                     }
                     catch (InterruptedException e) {
                         e.printStackTrace();
@@ -216,6 +216,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             }
         };
         new Thread(runnable).start();
+
     }
 
 
@@ -505,7 +506,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             characteristics =
                     manager.getCameraCharacteristics(mCameraDevice.getId());
 
-            exposure =characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE).getLower();//gets the upper exposure time suported by the camera object
+            exposure =characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE).getUpper();//gets the upper exposure time suported by the camera object
             //  exposure = exposure - Long.valueOf((long)10000);//reduces the exposure slightly inorder to prevent errors. Will try without. seems to be working without
             // Log.i("tag", characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE) + "");
             Size[] jpegSizes = null;
@@ -597,9 +598,13 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                         buffer = image.getPlanes()[0].getBuffer();
                         bytes = new byte[buffer.capacity()];
                         buffer.get(bytes);
+
                         save(bytes);
                         Log.i("tag","saved image");
                         done++;
+
+                        processor.setImage(file.getCanonicalPath());//starts the data processor
+                        //processor.process();
 
 
                         buffer.clear();//try to fix the buffer abandonding
@@ -635,7 +640,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                         output.flush();
                         output.close();
                         output=null;
-                        processor.setImage(file.getAbsolutePath());//starts the data processor
+
 
 
                     } finally {
