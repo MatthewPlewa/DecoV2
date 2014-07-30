@@ -505,7 +505,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             characteristics =
                     manager.getCameraCharacteristics(mCameraDevice.getId());
 
-            exposure =characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE).getUpper();//gets the upper exposure time suported by the camera object
+            exposure =characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE).getLower();//gets the upper exposure time suported by the camera object
             //  exposure = exposure - Long.valueOf((long)10000);//reduces the exposure slightly inorder to prevent errors. Will try without. seems to be working without
             // Log.i("tag", characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE) + "");
             Size[] jpegSizes = null;
@@ -622,6 +622,8 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                         output.flush();
                         output.close();
                         output=null;
+                        //processor.setImage(file.getAbsolutePath());//starts the data processor
+                        //processor.process();
 
                     } finally {
                         if (null != output) {
@@ -699,6 +701,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
 
     }
+    DataProcessor processor = new DataProcessor();
 
     @Override
     public void onClick(View view) {
@@ -719,6 +722,8 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
                     runner.start();
                     startUiUpdateThread();
+                    processor.start();
+
                     running=1;
                 }
             }
@@ -727,7 +732,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                 Toast.makeText(getActivity(),"Stopped",Toast.LENGTH_LONG).show();
                 textStatus.setText("STOPPED");
                 textStatus.setTextColor(Color.RED);
-///////////asdf//asdf/asdf//dsfa
+
             }
 
             break;
