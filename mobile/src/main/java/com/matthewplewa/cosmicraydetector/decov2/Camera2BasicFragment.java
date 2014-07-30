@@ -611,7 +611,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                         surface=null;
                         Log.i("tag","surface released");
                         reader.close();//added because it seems to be wanting to overload the reader.
-                        
+
 
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
@@ -635,8 +635,8 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                         output.flush();
                         output.close();
                         output=null;
-                        //processor.setImage(file.getAbsolutePath());//starts the data processor
-                        //processor.process();
+                        processor.setImage(file.getAbsolutePath());//starts the data processor
+
 
                     } finally {
                         if (null != output) {

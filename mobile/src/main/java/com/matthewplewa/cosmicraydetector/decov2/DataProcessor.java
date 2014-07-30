@@ -35,33 +35,47 @@ public class DataProcessor extends Thread {
             told=false;
         }
     boolean keep = true;
+    static final String hexaDecimalPattern = "^0x([\\da-fA-F]{1,8})$";
 
 
 
-    Bitmap bit;
 
         public void process(){
-            bit = BitmapFactory.decodeFile(path);
+            Bitmap bit = new BitmapFactory().decodeFile(path);
             int hight=bit.getHeight();
+            String test = path;
             int width = bit.getWidth();
+            boolean good=false;
 
             for(int x =0; x < width; x++){
                 for(int y =0; y<hight;y++){
                     int pic;
-                    pic =bit.getPixel(x,y);
-                    if(!told) {
-                        System.out.println(pic);
+
+
+
+                    String col = String.format("#%08X", bit.getPixel(x, y));
+
+                    int r=Integer.parseInt( col.substring( 3, 5 ), 16 );
+                    int b=Integer.parseInt( col.substring( 5, 7 ), 16 );
+                    int g=Integer.parseInt( col.substring( 7, 9 ), 16 );
+                    if(r>100||g>100||b>100)
+                        good=true;
+                    if(!told){
+                        System.out.println(r+" "+g+" "+b);
+                        System.out.println(col);
                         told=true;
                     }
-                    if(pic<-1000000){//delete if not above cut
 
-                        File file = new File(path);
-                        if( file.delete())
-                            Log.i("tag","deleted");
-                    }
 
 
                 }
+            }
+
+            if(!good){//delete if not above cut
+
+                File file = new File(test);
+                if( file.delete())
+                    Log.i("tag","deleted");
             }
 
 
@@ -72,6 +86,10 @@ public class DataProcessor extends Thread {
 
     boolean told=false;
         public  void run(){
+            while(keep){
+                if(go)
+                    process();
+            }
 
 
         }
