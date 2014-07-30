@@ -551,25 +551,38 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation));
 
-            // Output file
-            c = Calendar.getInstance();
-            //System.out.println("current: "+c.getTime());
+            Calendar c = Calendar.getInstance();
+            int year = c.get(Calendar.YEAR);
+            int month= c.get(Calendar.MONTH)+1;
+            int day= (c.get(Calendar.DAY_OF_MONTH));
+            int hour= c.get(Calendar.HOUR_OF_DAY);
+            int min= c.get(Calendar.MINUTE);
+            int seconds = c.get(Calendar.SECOND);
 
-            z = c.getTimeZone();
-            offset = z.getRawOffset();
-            if(z.inDaylightTime(new Date())){
-                offset = offset + z.getDSTSavings();
-            }
-            offsetHrs = offset / 1000 / 60 / 60;
-            offsetMins = offset / 1000 / 60 % 60;
+            //string convertion
+            String Month = month+"";
+            String Day = day+"";
+            String Hour = hour+"";
+            String Min= min+"";
+            String Seconds = seconds +"";
 
-            //System.out.println("offset: " + offsetHrs);
-            //System.out.println("offset: " + offsetMins);
 
-            c.add(Calendar.HOUR_OF_DAY, (-offsetHrs));
-            c.add(Calendar.MINUTE, (-offsetMins));
+            //keeps it in the correct formate
+            if(month<10)
+                Month = "0"+ month;
+            if(day<10)
+                Day = "0"+day;
+            if(hour <10)
+                Hour = "0"+hour;
+            if(min<10)
+                Min="0"+min;
+            if(seconds <10)
+                Seconds = "0"+seconds;
 
-            file = new File(Environment.getExternalStorageDirectory(),"DECO/"+c.getTime()+ ".jpg");
+            //setting formate for file name
+            String pic =""+ year+Month+Day+"_"+Hour+Min+Seconds;
+
+            file = new File(Environment.getExternalStorageDirectory(),"DECO/"+pic+ ".jpg");
 
             // This listener is called when a image is ready in ImageReader
             readerListener = new ImageReader.OnImageAvailableListener() {
@@ -598,7 +611,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                         surface=null;
                         Log.i("tag","surface released");
                         reader.close();//added because it seems to be wanting to overload the reader.
-                        c.clear();
+                        
 
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
