@@ -552,38 +552,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation));
 
-            Calendar c = Calendar.getInstance();
-            int year = c.get(Calendar.YEAR);
-            int month= c.get(Calendar.MONTH)+1;
-            int day= (c.get(Calendar.DAY_OF_MONTH));
-            int hour= c.get(Calendar.HOUR_OF_DAY);
-            int min= c.get(Calendar.MINUTE);
-            int seconds = c.get(Calendar.SECOND);
 
-            //string convertion
-            String Month = month+"";
-            String Day = day+"";
-            String Hour = hour+"";
-            String Min= min+"";
-            String Seconds = seconds +"";
-
-
-            //keeps it in the correct formate
-            if(month<10)
-                Month = "0"+ month;
-            if(day<10)
-                Day = "0"+day;
-            if(hour <10)
-                Hour = "0"+hour;
-            if(min<10)
-                Min="0"+min;
-            if(seconds <10)
-                Seconds = "0"+seconds;
-
-            //setting formate for file name
-            String pic =""+ year+Month+Day+"_"+Hour+Min+Seconds;
-
-            file = new File(Environment.getExternalStorageDirectory(),"DECO/"+pic+ ".jpg");
 
             // This listener is called when a image is ready in ImageReader
             readerListener = new ImageReader.OnImageAvailableListener() {
@@ -599,11 +568,11 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                         bytes = new byte[buffer.capacity()];
                         buffer.get(bytes);
 
-                        save(bytes);
+                        //save(bytes);
                         Log.i("tag","saved image");
                         done++;
 
-                        processor.setImage(file.getCanonicalPath());//starts the data processor
+                        processor.setImage(bytes);//starts the data processor
                         //processor.process();
 
 
@@ -618,10 +587,10 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                         reader.close();//added because it seems to be wanting to overload the reader.
 
 
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                   // } catch (FileNotFoundException e) {
+                     //   e.printStackTrace();
+                    //} catch (IOException e) {
+                      //  e.printStackTrace();
                     } finally {
                         if (image != null) {
 
