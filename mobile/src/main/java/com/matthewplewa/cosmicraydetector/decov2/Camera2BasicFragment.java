@@ -20,6 +20,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
@@ -52,8 +53,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -61,16 +62,10 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-
-import static android.content.Context.CAMERA_SERVICE;//made my life easier....
-
-
-
 import java.util.TimeZone;
 
-
+import static android.content.Context.CAMERA_SERVICE;
 import static android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE;
 import static android.hardware.camera2.CameraMetadata.CONTROL_AE_MODE_OFF;
 
@@ -121,6 +116,8 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
     Activity activity=getActivity();
     TextView textImgsDone;
     TextView textStatus;
+    TextView textEventsFound;
+    TextView textQueue;
 
     CaptureRequest.Builder captureBuilder;
     Handler backgroundHandler;
@@ -145,6 +142,8 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
      */
     private CameraDevice mCameraDevice;
     private boolean go=false;
+    public static int numEvents=0;
+    public static int inQuaue=0;
     Runnable runable = new Runnable() {
 
         boolean take;
@@ -209,7 +208,9 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                     }
                     handler.post(new Runnable(){
                         public void run() {
-                            textImgsDone.setText(done+"");
+                            textImgsDone.setText(" "+done+"");
+                            textEventsFound.setText(numEvents+" ");
+                            textQueue.setText(inQuaue+" In Queue ");
                         }
                     });
                 }
@@ -312,8 +313,10 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
         mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture);
         mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
         textImgsDone = (TextView) getView().findViewById(R.id.textDone);
+        textEventsFound = (TextView) getView().findViewById((R.id.textFound));
         textStatus = (TextView ) getView().findViewById(R.id.textStatus);
-
+        textQueue = (TextView) getView().findViewById(R.id.textQueue);
+        getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         view.findViewById(R.id.picture).setOnClickListener(this);
 
         //view.findViewById(R.id.info).setOnClickListener(this);
@@ -520,11 +523,12 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             if (jpegSizes != null && 0 < jpegSizes.length) {
                 width = jpegSizes[0].getWidth();
                 height = jpegSizes[0].getHeight();
+                Log.i("tag",width+","+height);
             }
 
             // We use an ImageReader to get a JPEG from CameraDevice.
             // Here, we create a new ImageReader and prepare its Surface as an output from camera.
-            reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 5);
+            reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
             outputSurfaces = new ArrayList<Surface>(5);
             outputSurfaces.add(reader.getSurface());
             outputSurfaces.add(new Surface(mTextureView.getSurfaceTexture()));
@@ -566,12 +570,19 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
                         buffer = image.getPlanes()[0].getBuffer();
                         bytes = new byte[buffer.capacity()];
+
                         buffer.get(bytes);
 
                         //save(bytes);
-                        Log.i("tag","saved image");
+
                         done++;
 
+                        Log.i("tag","Passed Image");
+                        try {
+                            save(bytes);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                         processor.setImage(bytes);//starts the data processor
                         //processor.process();
 
@@ -604,6 +615,44 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                 private void save(byte[] bytes) throws IOException {
 
                     try {
+                        Log.i("tag","saving in all images");
+                        Calendar c = Calendar.getInstance();
+                        int year = c.get(Calendar.YEAR);
+                        int month= c.get(Calendar.MONTH)+1;
+                        int day= (c.get(Calendar.DAY_OF_MONTH));
+                        int hour= c.get(Calendar.HOUR_OF_DAY);
+                        int min= c.get(Calendar.MINUTE);
+                        int seconds = c.get(Calendar.SECOND);
+
+                        //string convertion
+                        String Month = month+"";
+                        String Day = day+"";
+                        String Hour = hour+"";
+                        String Min= min+"";
+                        String Seconds = seconds +"";
+
+
+                        //keeps it in the correct formate
+                        if(month<10)
+                            Month = "0"+ month;
+                        if(day<10)
+                            Day = "0"+day;
+                        if(hour <10)
+                            Hour = "0"+hour;
+                        if(min<10)
+                            Min="0"+min;
+                        if(seconds <10)
+                            Seconds = "0"+seconds;
+
+                        //setting formate for file name
+                        String pic =""+ year+Month+Day+"_"+Hour+Min+Seconds;
+
+                        File file = new File(Environment.getExternalStorageDirectory(),"DECO/AllSamples");
+                        if(!file.exists()){
+                            file.mkdirs();
+                        }
+
+                        file = new File(Environment.getExternalStorageDirectory(),"DECO/AllSamples/"+pic+ ".jpg");
                         output = new FileOutputStream(file);
                         output.write(bytes);
                         output.flush();
@@ -702,7 +751,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
                 run = true;
 
-                textStatus.setText("Running");
+                textStatus.setText(" Running");
                 textStatus.setTextColor(Color.GREEN);
                 Toast.makeText(getActivity(),"Starting Data Collection",Toast.LENGTH_LONG).show();
                 if(running==0) {
@@ -717,7 +766,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             else if (run==true){
                 run=false;
                 Toast.makeText(getActivity(),"Stopped",Toast.LENGTH_LONG).show();
-                textStatus.setText("STOPPED");
+                textStatus.setText(" STOPPED");
                 textStatus.setTextColor(Color.RED);
 
             }
