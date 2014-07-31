@@ -32,7 +32,7 @@
         android:background="#4285f4">
 
         <Button
-            android:id="@+id/picture"
+            android:id="@+id/buttonPicture"
             android:layout_width="wrap_content"
             android:layout_height="35dp"
             android:layout_gravity="center"
