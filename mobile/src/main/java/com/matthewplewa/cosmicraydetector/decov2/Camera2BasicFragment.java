@@ -51,11 +51,15 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -63,6 +67,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Scanner;
 import java.util.TimeZone;
 
 import static android.content.Context.CAMERA_SERVICE;
@@ -118,12 +123,14 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
     TextView textStatus;
     TextView textEventsFound;
     TextView textQueue;
+    Button buttonStart;
 
     CaptureRequest.Builder captureBuilder;
     Handler backgroundHandler;
     CameraCaptureSession.CaptureListener captureListener;
     Surface surface = null;
     boolean surfacegot=false;
+    boolean changed=false;
     int running =0;
     /**
      * An {@link AutoFitTextureView} for camera preview.
@@ -165,20 +172,22 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
                 while (go && run) {
                     go=false;
+                    if (preped == 0) {//the looper has to be prepared before you can start the looper that is in the takePicture() method
+                        Looper.prepare();
+                        preped = 1;
+                    }
+                    startPreview();//start the preview here because take picture requires a running preview
 
                     try {
                         Thread.sleep(100);// need to make this listen for the picture to be taken
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    if (preped == 0) {//the looper has to be prepared before you can start the looper that is in the takePicture() method
-                        Looper.prepare();
-                        preped = 1;
-                    }
+
                     /*
                     this is where all of the work is started in the thread.
                      */
-                    startPreview();//start the preview here because take picture requires a running preview
+
                     takePicture();//starts the image on the main thread NOT this thread.
 
 
@@ -201,23 +210,47 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                 boolean keep = true;
                 while (keep) {
                     try {
-                        Thread.sleep(10000);
+                        Thread.sleep(5000);
                     }
                     catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     handler.post(new Runnable(){
                         public void run() {
-                            textImgsDone.setText(" "+done+"");
-                            textEventsFound.setText(numEvents+" ");
-                            textQueue.setText(inQuaue+" In Queue ");
+                            textImgsDone.setText(" " + done + "");
+                            textEventsFound.setText(numEvents + " ");
+                            textQueue.setText(inQuaue + " In Queue ");
+                            BufferedWriter writer = null;
+                            if (changed) {
+                                changed=false;
+                                try {
+
+
+                                    File file = new File(Environment.getExternalStorageDirectory(), "DECO/status");
+                                    if (!file.exists()) {
+                                        file.mkdirs();
+                                    }
+                                    Log.i("write", "making file");
+                                    file = new File(Environment.getExternalStorageDirectory(), "DECO/status/current.txt");
+
+                                    writer = new BufferedWriter(new FileWriter(file));
+                                    // data is output to a text file
+
+                                    writer.write(done + "");
+                                    writer.newLine();
+                                    writer.write(numEvents + "");
+                                    writer.close();
+
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
                         }
                     });
                 }
             }
         };
         new Thread(runnable).start();
-
     }
 
 
@@ -316,10 +349,36 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
         textEventsFound = (TextView) getView().findViewById((R.id.textFound));
         textStatus = (TextView ) getView().findViewById(R.id.textStatus);
         textQueue = (TextView) getView().findViewById(R.id.textQueue);
+        buttonStart = (Button) getView().findViewById(R.id.buttonPicture);
         getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        view.findViewById(R.id.picture).setOnClickListener(this);
+        view.findViewById(R.id.buttonPicture).setOnClickListener(this);
+        int[] tall = new int[3];
+        Scanner scanner = null;
+        File thefile =new File(Environment.getExternalStorageDirectory(), "DECO/status/current.txt");
 
-        //view.findViewById(R.id.info).setOnClickListener(this);
+
+        if(thefile.exists()) {
+            try {
+                scanner = new Scanner(new File(Environment.getExternalStorageDirectory(), "DECO/status/current.txt"));
+
+
+                int i = 0;
+                while (scanner.hasNextInt()) {
+                    tall[i++] = scanner.nextInt();
+                }
+                scanner.close();
+                scanner=null;
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            textImgsDone.setText(tall[0]+"");
+            textEventsFound.setText(tall[1]+"");
+            done=tall[0];
+            numEvents= tall[1];
+
+            //view.findViewById(R.id.info).setOnClickListener(this);
+        }
     }
 
     @SuppressLint("Override")
@@ -576,6 +635,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                         //save(bytes);
 
                         done++;
+                        changed=true;
 
                         Log.i("tag","Passed Image");
                         try {
@@ -742,7 +802,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.picture: {
+            case R.id.buttonPicture: {
 
             }
             if (run == false) {
@@ -750,6 +810,8 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                     go=true;
 
                 run = true;
+                buttonStart.setText("STOP");
+
 
                 textStatus.setText(" Running");
                 textStatus.setTextColor(Color.GREEN);
@@ -764,6 +826,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                 }
             }
             else if (run==true){
+                buttonStart.setText("START");
                 run=false;
                 Toast.makeText(getActivity(),"Stopped",Toast.LENGTH_LONG).show();
                 textStatus.setText(" STOPPED");

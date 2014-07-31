@@ -103,8 +103,8 @@ public class DataProcessor extends Thread {
     }
     Bitmap bits;
     String tag = "processor";
-    int scaleX=10;
-    int scaleY=10;
+    double scaleX=10.5;
+    double scaleY=10.5;
     int tempBuffer;
 
     public void process() {
@@ -119,7 +119,7 @@ public class DataProcessor extends Thread {
         bitmapOptions.inPreferredConfig= Bitmap.Config.ARGB_8888;
         bits = BitmapFactory.decodeByteArray(bytes,0,bytes.length,bitmapOptions);
         Bitmap bit = bits.copy(Bitmap.Config.ARGB_8888,true);
-        bit.reconfigure(bit.getWidth()/scaleX,bit.getHeight()/scaleY, Bitmap.Config.ARGB_8888);
+        bit.reconfigure((int)(bit.getWidth()/scaleX),(int) (bit.getHeight()/scaleY), Bitmap.Config.ARGB_8888);
         Log.i(tag,"decoded");
         told = false;
         int hight = bit.getHeight();
@@ -128,6 +128,7 @@ public class DataProcessor extends Thread {
         int rTemp=0;
         int gTemp=0;
         int bTemp=0;
+        int numpix=0;
         boolean good = false;
 
         for (int x = 0; x < width; x++) {
@@ -140,8 +141,10 @@ public class DataProcessor extends Thread {
                 int r = Integer.parseInt(col.substring(3, 5), 16);
                 int b = Integer.parseInt(col.substring(5, 7), 16);
                 int g = Integer.parseInt(col.substring(7, 9), 16);
-                if (r > 50||b>50||g>50 )
-                    good=true;
+                if (r > 40||b>40||g>40 ) {
+                    good = true;
+                    numpix++;
+                }
                 if(r>rTemp)
                     rTemp=r;
                 if(g>gTemp)
@@ -161,7 +164,7 @@ public class DataProcessor extends Thread {
         Log.i(tag,"Max r g b values"+rTemp+","+gTemp+","+bTemp);
         Log.i(tag,"image done");
         Log.i(tag,good+"");
-        if (good) {//delete if not above cut
+        if (good&&numpix<200) {//delete if not above cut
 
             try {
                 save(bytes);
@@ -173,7 +176,7 @@ public class DataProcessor extends Thread {
         this sets up intelegent scaleing so that we can always have the highest resolution possible without having to worry about
         having to large a quoue build up.
          */
-        if(paths.size()>0) {
+        /*if(paths.size()>0) {
             ready = true;
             if(paths.size()>3){
                 if(tempBuffer<paths.size()) {
@@ -186,7 +189,7 @@ public class DataProcessor extends Thread {
             ready = false;
             scaleX--;
             scaleY--;
-        }
+        }*/
         Camera2BasicFragment.inQuaue=paths.size();
         Log.i(tag,scaleX+","+scaleY+","+bit.getWidth()+","+bit.getHeight());
         go=true;
