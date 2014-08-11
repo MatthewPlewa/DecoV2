@@ -44,6 +44,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Log;
+import android.util.Range;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
@@ -51,6 +52,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -72,6 +74,8 @@ import java.util.TimeZone;
 
 import static android.content.Context.CAMERA_SERVICE;
 import static android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE;
+import static android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE;
+import static android.hardware.camera2.CameraCharacteristics.SENSOR_MAX_ANALOG_SENSITIVITY;
 import static android.hardware.camera2.CameraMetadata.CONTROL_AE_MODE_OFF;
 
 
@@ -337,6 +341,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
     @SuppressLint("Override")
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);//screen wasnt staying on so i added this to keep it on!
         return inflater.inflate(R.layout.fragment_camera2_basic, container, false);
     }
 
@@ -375,11 +380,15 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             textImgsDone.setText(tall[0]+"");
             textEventsFound.setText(tall[1]+"");
             done=tall[0];
+            initial=tall[0];
+
             numEvents= tall[1];
 
             //view.findViewById(R.id.info).setOnClickListener(this);
         }
     }
+
+    int initial =0;
 
     @SuppressLint("Override")
     @Override
@@ -399,6 +408,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
     }
 
     /**
+     *
      * Opens a {@link CameraDevice}. The result is listened by `mStateListener`.
      */
     private void openCamera() {
@@ -587,7 +597,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
             // We use an ImageReader to get a JPEG from CameraDevice.
             // Here, we create a new ImageReader and prepare its Surface as an output from camera.
-            reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
+            reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 10);
             outputSurfaces = new ArrayList<Surface>(5);
             outputSurfaces.add(reader.getSurface());
             outputSurfaces.add(new Surface(mTextureView.getSurfaceTexture()));
@@ -599,15 +609,19 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,CONTROL_AE_MODE_OFF);
             captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, exposure);
             captureBuilder.set(CaptureRequest.NOISE_REDUCTION_MODE,CaptureRequest.NOISE_REDUCTION_MODE_OFF);
-            captureBuilder.set(CaptureRequest.JPEG_QUALITY, Byte.valueOf(100+""));
-            Log.i("tag",exposure.floatValue()+"");
+            captureBuilder.set(CaptureRequest.BLACK_LEVEL_LOCK,false);// without it unlocked it might cause issues
+            Range<Integer> sensitivity = characteristics.get(SENSOR_INFO_SENSITIVITY_RANGE);
+            captureBuilder.set(CaptureRequest.SENSOR_SENSITIVITY,  sensitivity.getUpper()/40 );// TODO this should also be done in the claibrator but saved forever. This just looked nice for the nexus 5.... this must be less than SENSOR_MAX_ANALOG_SENSITIVITY
+            Log.i("max analog sensitivity" ,""+characteristics.get(SENSOR_MAX_ANALOG_SENSITIVITY));
+           // captureBuilder.set(CaptureRequest.JPEG_QUALITY, Byte.valueOf(100+""));
+            Log.i("tag",exposure.floatValue()+" <= exposure");
 
             surface = reader.getSurface();
             if(!surface.isValid()){
                 Log.i("tag","invalid surface");
                 return;
             }
-            captureBuilder.addTarget(surface);
+            captureBuilder.addTarget(reader.getSurface());
 
             setUpCaptureRequestBuilder2(captureBuilder);
 
@@ -621,59 +635,61 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             readerListener = new ImageReader.OnImageAvailableListener() {
                 @Override
                 public void onImageAvailable(ImageReader reader) {
-                    go=true;
+                    go=true;// this will tell our thread that we are ready to take a nother photo. This
+                            // is not the most efficiant way to handle this because the camera takes a photo
+                            // and it takes a lil bit before this is called. OnImageCapture or somthing similar should be used!
 
                     try {
 
-                        image = reader.acquireLatestImage();
+                        image = reader.acquireLatestImage();//Pulls your image from the image reader
 
-                        buffer = image.getPlanes()[0].getBuffer();
+                        buffer = image.getPlanes()[0].getBuffer();//Each image has diffrent plains you have to pull from the first plain aka index of 0
                         bytes = new byte[buffer.capacity()];
 
                         buffer.get(bytes);
-
+                        //we do not want to save here anymore because it just causes efficancy issues
                         //save(bytes);
 
-                        done++;
+                        done++;//this is a gobal counter that will allow us to find out how many frames we have captured
                         changed=true;
 
                         Log.i("tag","Passed Image");
-                        try {
+                        /////////////////////////////////////////////////////////////////////
+                        try {//  THIS IS ONLY FOR TESTING OF THE IMAGE FILTER THIS MUST BE REMOVED BEFORE DISTROBUTION TODO
                             save(bytes);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        processor.setImage(bytes);//starts the data processor
+                        ////////////////////////////////////////////////////////////////////
+                        processor.setImage(bytes);//starts the data processor/ sends it the bytes
                         //processor.process();
 
-
+                        //after capture clean up to prevent memory leaks
                         buffer.clear();//try to fix the buffer abandonding
                         buffer=null;
                         image.close();
 
-
-                        surface.release();
+                        if(surface!=null)
+                            surface.release();
                         surface=null;
                         Log.i("tag","surface released");
                         reader.close();//added because it seems to be wanting to overload the reader.
 
 
-                   // } catch (FileNotFoundException e) {
-                     //   e.printStackTrace();
-                    //} catch (IOException e) {
-                      //  e.printStackTrace();
+
                     } finally {
                         if (image != null) {
 
+                            // just to make sure!
+                            image=null;
 
-
-                            Log.i("tag",done+"");
+                            Log.i("tag","done on this run="+(done-initial));
                         }
                     }
                 }
 
                 private void save(byte[] bytes) throws IOException {
-
+                    // this is to make the name for the file when we save it also does all the formating
                     try {
                         Log.i("tag","saving in all images");
                         Calendar c = Calendar.getInstance();
@@ -706,12 +722,14 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
                         //setting formate for file name
                         String pic =""+ year+Month+Day+"_"+Hour+Min+Seconds;
+                        // bellow starts the file path creation
 
                         File file = new File(Environment.getExternalStorageDirectory(),"DECO/AllSamples");
+                        //^^ sets up for new directory check
                         if(!file.exists()){
-                            file.mkdirs();
+                            file.mkdirs();// if the directory doesnt exist this will make it.
                         }
-
+                        // creates the file to be output
                         file = new File(Environment.getExternalStorageDirectory(),"DECO/AllSamples/"+pic+ ".jpg");
                         output = new FileOutputStream(file);
                         output.write(bytes);
@@ -723,8 +741,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
                     } finally {
                         if (null != output) {
-                            //utput.close();
-                            //startPreview();
+
 
                         }
                     }
