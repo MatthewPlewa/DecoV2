@@ -80,8 +80,11 @@ public class DataProcessor extends Thread {
 
             //setting formate for file name
             String pic =""+ year+Month+Day+"_"+Hour+Min+Seconds;
+            File file = new File(Environment.getExternalStorageDirectory(),"DECO/EVENTS/");
+            if(!file.exists())
+                file.mkdirs(); //makes sure that the directory exists! if not then it makes it exist
 
-            File file = new File(Environment.getExternalStorageDirectory(),"DECO/"+pic+ ".jpg");
+            file = new File(Environment.getExternalStorageDirectory(),"DECO/"+pic+ ".jpg");
             Log.i(tag,"file made");
             output = new FileOutputStream(file);
             output.write(bytes);
@@ -103,8 +106,8 @@ public class DataProcessor extends Thread {
     }
     Bitmap bits;
     String tag = "processor";
-    double scaleX=10.5;
-    double scaleY=10.5;
+    double scaleX=11;// if you want to change the scale (which will have to be changed in the calibration protion of the set up (not done) you need to change here TODO
+    double scaleY=11;
     int tempBuffer;
 
     public void process() {
@@ -119,7 +122,9 @@ public class DataProcessor extends Thread {
         bitmapOptions.inPreferredConfig= Bitmap.Config.ARGB_8888;
         bits = BitmapFactory.decodeByteArray(bytes,0,bytes.length,bitmapOptions);
         Bitmap bit = bits.copy(Bitmap.Config.ARGB_8888,true);
-        bit.reconfigure((int)(bit.getWidth()/scaleX),(int) (bit.getHeight()/scaleY), Bitmap.Config.ARGB_8888);
+        // we want to scale the image down to something that will be usable and able to be processed alot faster
+
+        bit =  Bitmap.createScaledBitmap(bit,(int) (bit.getWidth()/scaleX),(int)(bit.getHeight()/scaleY),false);
         Log.i(tag,"decoded");
         told = false;
         int hight = bit.getHeight();
@@ -174,7 +179,8 @@ public class DataProcessor extends Thread {
         }
         /*
         this sets up intelegent scaleing so that we can always have the highest resolution possible without having to worry about
-        having to large a quoue build up.
+        having to large a quoue build up.// for consistancy measures we are not going to do this anymore.... will use for calibration!
+
          */
         /*if(paths.size()>0) {
             ready = true;
@@ -198,6 +204,44 @@ public class DataProcessor extends Thread {
     }
 
 
+
+
+
+
+
+    public void longProcessor(){
+        /*
+        this will allow for full resolution proce3ssing of the images.
+        should only be used for processing after the initial image filter has been used aka processor()
+         */
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     boolean told = false;
     boolean ready=true;
 
@@ -212,6 +256,7 @@ public class DataProcessor extends Thread {
 
             }
     }
+
 
 
 }
