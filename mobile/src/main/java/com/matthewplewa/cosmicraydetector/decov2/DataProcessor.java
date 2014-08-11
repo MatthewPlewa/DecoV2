@@ -19,11 +19,12 @@ import java.util.Calendar;
 public class DataProcessor extends Thread {
 
     ArrayList<byte[]> paths= new ArrayList<byte[]>();
+    final boolean DEBUG=true;
 
     public DataProcessor() {
 
         super();
-        Log.i(null, "starting thread");
+        if(DEBUG)Log.i(null, "starting thread");
     }
 
 
@@ -41,7 +42,7 @@ public class DataProcessor extends Thread {
             go = true;
             running = true;
         }
-        Log.i(tag,paths.size()+" in Queue");
+        if(DEBUG)Log.i(tag,paths.size()+" in Queue");
 
 
     }
@@ -49,7 +50,7 @@ public class DataProcessor extends Thread {
     private void save(byte[] bytes) throws IOException {
 
         try {
-            Log.i(tag,"saving");
+            if(DEBUG)Log.i(tag,"saving");
             Calendar c = Calendar.getInstance();
             int year = c.get(Calendar.YEAR);
             int month= c.get(Calendar.MONTH)+1;
@@ -85,10 +86,10 @@ public class DataProcessor extends Thread {
                 file.mkdirs(); //makes sure that the directory exists! if not then it makes it exist
 
             file = new File(Environment.getExternalStorageDirectory(),"DECO/"+pic+ ".jpg");
-            Log.i(tag,"file made");
+            if(DEBUG)Log.i(tag,"file made");
             output = new FileOutputStream(file);
             output.write(bytes);
-            Log.i(tag,"witten");
+            if(DEBUG)Log.i(tag,"witten");
             output.flush();
             output.close();
             output=null;
@@ -112,12 +113,12 @@ public class DataProcessor extends Thread {
 
     public void process() {
         ready=false;
-        Log.i(tag,"taking image");
+        if(DEBUG)Log.i(tag,"taking image");
         byte[] bytes = paths.get(0);
-        Log.i(tag,"image in");
+        if(DEBUG)Log.i(tag,"image in");
         paths.remove(0);
 
-        Log.i(tag,"Decoding");
+        if(DEBUG)Log.i(tag,"Decoding");
         BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
         bitmapOptions.inPreferredConfig= Bitmap.Config.ARGB_8888;
         bits = BitmapFactory.decodeByteArray(bytes,0,bytes.length,bitmapOptions);
@@ -125,7 +126,7 @@ public class DataProcessor extends Thread {
         // we want to scale the image down to something that will be usable and able to be processed alot faster
 
         bit =  Bitmap.createScaledBitmap(bit,(int) (bit.getWidth()/scaleX),(int)(bit.getHeight()/scaleY),false);
-        Log.i(tag,"decoded");
+        if(DEBUG)Log.i(tag,"decoded");
         told = false;
         int hight = bit.getHeight();
 
@@ -166,9 +167,9 @@ public class DataProcessor extends Thread {
 
         }
 
-        Log.i(tag,"Max r g b values"+rTemp+","+gTemp+","+bTemp);
-        Log.i(tag,"image done");
-        Log.i(tag,good+"");
+        if(DEBUG)Log.i(tag,"Max r g b values"+rTemp+","+gTemp+","+bTemp);
+        if(DEBUG)Log.i(tag,"image done");
+        if(DEBUG)Log.i(tag,good+"");
         if (good&&numpix<200) {//delete if not above cut
 
             try {
@@ -197,7 +198,7 @@ public class DataProcessor extends Thread {
             scaleY--;
         }*/
         Camera2BasicFragment.inQuaue=paths.size();
-        Log.i(tag,scaleX+","+scaleY+","+bit.getWidth()+","+bit.getHeight());
+        if(DEBUG)Log.i(tag,scaleX+","+scaleY+","+bit.getWidth()+","+bit.getHeight());
         go=true;
         bit.recycle();
 

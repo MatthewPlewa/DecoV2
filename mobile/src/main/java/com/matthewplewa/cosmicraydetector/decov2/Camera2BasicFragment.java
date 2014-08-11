@@ -81,6 +81,10 @@ import static android.hardware.camera2.CameraMetadata.CONTROL_AE_MODE_OFF;
 
 public class Camera2BasicFragment extends Fragment  implements View.OnClickListener  {
 
+
+    final boolean DEBUG = true;
+
+
     /**
      * Conversion from screen rotation to JPEG orientation.
      */
@@ -234,7 +238,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                                     if (!file.exists()) {
                                         file.mkdirs();
                                     }
-                                    Log.i("write", "making file");
+                                    if(DEBUG)Log.i("write", "making file");
                                     file = new File(Environment.getExternalStorageDirectory(), "DECO/status/current.txt");
 
                                     writer = new BufferedWriter(new FileWriter(file));
@@ -580,7 +584,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
             exposure =characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE).getUpper();//gets the upper exposure time suported by the camera object
             //  exposure = exposure - Long.valueOf((long)10000);//reduces the exposure slightly inorder to prevent errors. Will try without. seems to be working without
-            // Log.i("tag", characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE) + "");
+            // if(DEBUG)Log.i("tag", characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE) + "");
             Size[] jpegSizes = null;
             if (characteristics != null) {
                 jpegSizes = characteristics
@@ -592,7 +596,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             if (jpegSizes != null && 0 < jpegSizes.length) {
                 width = jpegSizes[0].getWidth();
                 height = jpegSizes[0].getHeight();
-                Log.i("tag",width+","+height);
+                if(DEBUG)Log.i("tag",width+","+height);
             }
 
             // We use an ImageReader to get a JPEG from CameraDevice.
@@ -612,13 +616,13 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             captureBuilder.set(CaptureRequest.BLACK_LEVEL_LOCK,false);// without it unlocked it might cause issues
             Range<Integer> sensitivity = characteristics.get(SENSOR_INFO_SENSITIVITY_RANGE);
             captureBuilder.set(CaptureRequest.SENSOR_SENSITIVITY,  sensitivity.getUpper()/40 );// TODO this should also be done in the claibrator but saved forever. This just looked nice for the nexus 5.... this must be less than SENSOR_MAX_ANALOG_SENSITIVITY
-            Log.i("max analog sensitivity" ,""+characteristics.get(SENSOR_MAX_ANALOG_SENSITIVITY));
+            if(DEBUG)Log.i("max analog sensitivity" ,""+characteristics.get(SENSOR_MAX_ANALOG_SENSITIVITY));
            // captureBuilder.set(CaptureRequest.JPEG_QUALITY, Byte.valueOf(100+""));
-            Log.i("tag",exposure.floatValue()+" <= exposure");
+            if(DEBUG)Log.i("tag",exposure.floatValue()+" <= exposure");
 
             surface = reader.getSurface();
             if(!surface.isValid()){
-                Log.i("tag","invalid surface");
+                if(DEBUG)Log.i("tag","invalid surface");
                 return;
             }
             captureBuilder.addTarget(reader.getSurface());
@@ -653,7 +657,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                         done++;//this is a gobal counter that will allow us to find out how many frames we have captured
                         changed=true;
 
-                        Log.i("tag","Passed Image");
+                        if(DEBUG)Log.i("tag","Passed Image");
                         /////////////////////////////////////////////////////////////////////
                         try {//  THIS IS ONLY FOR TESTING OF THE IMAGE FILTER THIS MUST BE REMOVED BEFORE DISTROBUTION TODO
                             save(bytes);
@@ -672,7 +676,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                         if(surface!=null)
                             surface.release();
                         surface=null;
-                        Log.i("tag","surface released");
+                        if(DEBUG)Log.i("tag","surface released");
                         reader.close();//added because it seems to be wanting to overload the reader.
 
 
@@ -683,7 +687,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                             // just to make sure!
                             image=null;
 
-                            Log.i("tag","done on this run="+(done-initial));
+                            if(DEBUG)Log.i("tag","done on this run="+(done-initial));
                         }
                     }
                 }
@@ -691,7 +695,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                 private void save(byte[] bytes) throws IOException {
                     // this is to make the name for the file when we save it also does all the formating
                     try {
-                        Log.i("tag","saving in all images");
+                        if(DEBUG)Log.i("tag","saving in all images");
                         Calendar c = Calendar.getInstance();
                         int year = c.get(Calendar.YEAR);
                         int month= c.get(Calendar.MONTH)+1;
