@@ -42,7 +42,7 @@ public class DataProcessor extends Thread {
             go = true;
             running = true;
         }
-        if(DEBUG)Log.i(tag,paths.size()+" in Queue");
+        if(DEBUG)Log.i(tag,paths.size()+" in Queue. is long running? "+longProcess );
 
 
     }
@@ -85,7 +85,7 @@ public class DataProcessor extends Thread {
             if(!file.exists())
                 file.mkdirs(); //makes sure that the directory exists! if not then it makes it exist
 
-            file = new File(Environment.getExternalStorageDirectory(),"DECO/"+pic+ ".jpg");
+            file = new File(Environment.getExternalStorageDirectory(),"DECO/EVENTS/"+pic+ ".jpg");
             if(DEBUG)Log.i(tag,"file made");
             output = new FileOutputStream(file);
             output.write(bytes);
@@ -107,9 +107,12 @@ public class DataProcessor extends Thread {
     }
     Bitmap bits;
     String tag = "processor";
-    double scaleX=11;// if you want to change the scale (which will have to be changed in the calibration protion of the set up (not done) you need to change here TODO
-    double scaleY=11;
-    int tempBuffer;
+    public static double scaleX=11;// if you want to change the scale (which will have to be changed in the calibration protion of the set up (not done) you need to change here TODO
+    public static double scaleY=11;
+    public static int rThresh=100;
+    public static int gThresh=100;
+    public static int bThresh=100;
+    public static boolean longProcess=false;
 
     public void process() {
         ready=false;
@@ -147,7 +150,7 @@ public class DataProcessor extends Thread {
                 int r = Integer.parseInt(col.substring(3, 5), 16);
                 int b = Integer.parseInt(col.substring(5, 7), 16);
                 int g = Integer.parseInt(col.substring(7, 9), 16);
-                if (r > 40||b>40||g>40 ) {
+                if (r > rThresh||b>bThresh||g>gThresh ) {
                     good = true;
                     numpix++;
                 }
@@ -167,36 +170,14 @@ public class DataProcessor extends Thread {
 
         }
 
+
         if(DEBUG)Log.i(tag,"Max r g b values"+rTemp+","+gTemp+","+bTemp);
         if(DEBUG)Log.i(tag,"image done");
         if(DEBUG)Log.i(tag,good+"");
         if (good&&numpix<200) {//delete if not above cut
-
-            try {
-                save(bytes);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            longProcessor(bits,bytes);
         }
-        /*
-        this sets up intelegent scaleing so that we can always have the highest resolution possible without having to worry about
-        having to large a quoue build up.// for consistancy measures we are not going to do this anymore.... will use for calibration!
 
-         */
-        /*if(paths.size()>0) {
-            ready = true;
-            if(paths.size()>3){
-                if(tempBuffer<paths.size()) {
-                    scaleX++;
-                    scaleY++;
-                }
-            }
-        }
-        else if(paths.size()==0) {
-            ready = false;
-            scaleX--;
-            scaleY--;
-        }*/
         Camera2BasicFragment.inQuaue=paths.size();
         if(DEBUG)Log.i(tag,scaleX+","+scaleY+","+bit.getWidth()+","+bit.getHeight());
         go=true;
@@ -210,12 +191,62 @@ public class DataProcessor extends Thread {
 
 
 
-    public void longProcessor(){
+    public void longProcessor(Bitmap map,byte[] bits){
         /*
         this will allow for full resolution proce3ssing of the images.
         should only be used for processing after the initial image filter has been used aka processor()
          */
+        longProcess=true;
+        int hight = map.getHeight();
 
+        int width = map.getWidth();
+        int rTemp=0;
+        int gTemp=0;
+        int bTemp=0;
+        int fullNumPix=0;
+        boolean fineGood = false;
+
+        for (int x = 0; x < width; x+=2) {
+            for (int y = 0; y < hight; y+=2) {
+                int pic;
+
+
+                String col = String.format("#%08X", map.getPixel(x, y));
+
+                int r = Integer.parseInt(col.substring(3, 5), 16);
+                int b = Integer.parseInt(col.substring(5, 7), 16);
+                int g = Integer.parseInt(col.substring(7, 9), 16);
+                if (r > rThresh||b>bThresh||g>gThresh ) {
+                    fineGood = true;
+                    fullNumPix++;
+                    if(fullNumPix>8){
+                        try {
+                            save(bits);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                if(r>rTemp)
+                    rTemp=r;
+                if(g>gTemp)
+                    gTemp=g;
+                if(b>bTemp)
+                    bTemp=b;
+
+            }
+
+
+        }
+
+        if(fineGood&&fullNumPix>8){
+            try {
+                save(bits);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        longProcess=false;
 
 
 
