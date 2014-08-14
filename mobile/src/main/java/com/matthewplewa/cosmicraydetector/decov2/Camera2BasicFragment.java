@@ -20,6 +20,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Color;
@@ -83,7 +84,8 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
 
     final boolean DEBUG = true;
-
+    final static boolean  RESTARTED=false;
+    public static boolean restarted=false;
 
     /**
      * Conversion from screen rotation to JPEG orientation.
@@ -140,6 +142,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
     boolean surfacegot=false;
     boolean changed=false;
     int running =0;
+    public static boolean calibrating=true;
     /**
      * An {@link AutoFitTextureView} for camera preview.
      */
@@ -170,15 +173,27 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
             boolean tr = true;
             while (tr) {
-                while (!go||!run) {
+
+                while (!go||!run||restarted) {
                     try {
-                        Thread.sleep(100);
+                        Thread.sleep(5000);//this will fix all the problems with it not being ready when it starts;
+                        restarted=false;
                     } catch (InterruptedException e) {
                         e.printStackTrace();
+
                     }
                 }
+                if(done-initial>=1500){//this will open a new activity that will then reopen this activitiy.
+                    Intent workaround = new Intent(getActivity(),WorkAround.class);
+                    startActivity(workaround);
+                    getActivity().finish();
+                    go=false;
+                }
+
 
                 while (go && run) {
+
+
                     go=false;
                     if (preped == 0) {//the looper has to be prepared before you can start the looper that is in the takePicture() method
                         Looper.prepare();
@@ -228,6 +243,14 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                             textImgsDone.setText(" " + done + "");
                             textEventsFound.setText(numEvents + " ");
                             textQueue.setText(inQuaue + " In Queue ");
+
+                            if(!runner.isAlive()&&running==1){
+                                runner.start();
+                            }
+
+                            if(!calibrating){
+                                textStatus.setText(" Running");
+                            }
                             BufferedWriter writer = null;
                             if (changed) {
                                 changed=false;
@@ -247,6 +270,11 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                                     writer.write(done + "");
                                     writer.newLine();
                                     writer.write(numEvents + "");
+                                    writer.newLine();
+                                    if (run)//this will tell this activity if it should start again.
+                                        writer.write(1+"");
+                                    if(!run)
+                                        writer.write(0+"");
                                     writer.close();
 
                                 } catch (IOException e) {
@@ -388,6 +416,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
             numEvents= tall[1];
 
+
             //view.findViewById(R.id.info).setOnClickListener(this);
         }
     }
@@ -448,6 +477,11 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             Toast.makeText(activity, "Cannot access the camera.", Toast.LENGTH_SHORT).show();
             activity.finish();
         }
+        if(restarted) {
+            startStop();
+
+        }
+
     }
 
     private void startPreview() {
@@ -615,7 +649,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             captureBuilder.set(CaptureRequest.NOISE_REDUCTION_MODE,CaptureRequest.NOISE_REDUCTION_MODE_OFF);
             captureBuilder.set(CaptureRequest.BLACK_LEVEL_LOCK,false);// without it unlocked it might cause issues
             Range<Integer> sensitivity = characteristics.get(SENSOR_INFO_SENSITIVITY_RANGE);
-            captureBuilder.set(CaptureRequest.SENSOR_SENSITIVITY,  sensitivity.getUpper()/40 );// TODO this should also be done in the claibrator but saved forever. This just looked nice for the nexus 5.... this must be less than SENSOR_MAX_ANALOG_SENSITIVITY
+            captureBuilder.set(CaptureRequest.SENSOR_SENSITIVITY,  characteristics.get(SENSOR_MAX_ANALOG_SENSITIVITY) );// TODO this should also be done in the claibrator but saved forever. This just looked nice for the nexus 5.... this must be less than SENSOR_MAX_ANALOG_SENSITIVITY
             if(DEBUG)Log.i("max analog sensitivity" ,""+characteristics.get(SENSOR_MAX_ANALOG_SENSITIVITY));
            // captureBuilder.set(CaptureRequest.JPEG_QUALITY, Byte.valueOf(100+""));
             if(DEBUG)Log.i("tag",exposure.floatValue()+" <= exposure");
@@ -665,13 +699,22 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                             e.printStackTrace();
                         }
                         ////////////////////////////////////////////////////////////////////
-                        processor.setImage(bytes);//starts the data processor/ sends it the bytes
-                        //processor.process();
+
+                       if (calibrating&&!restarted) {
+
+                            calibrater.setImage(bytes);
+
+                        }
+                        if(DEBUG)Log.i("whats up",calibrating+"");
+                        if(!calibrating)
+                            processor.setImage(bytes);//starts the data processor/ sends it the bytes
+
 
                         //after capture clean up to prevent memory leaks
                         buffer.clear();//try to fix the buffer abandonding
                         buffer=null;
                         image.close();
+                        bytes=null;
 
                         if(surface!=null)
                             surface.release();
@@ -819,41 +862,54 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
     }
     DataProcessor processor = new DataProcessor();
+    Calibrate calibrater = new Calibrate();
+
+
+    public void startStop(){
+
+        if (run == false) {
+            if(!go)
+                go=true;
+
+            run = true;
+            buttonStart.setText("STOP");
+
+
+            textStatus.setText(" Calibrating");
+            textStatus.setTextColor(Color.GREEN);
+            Toast.makeText(getActivity(),"Starting Data Collection",Toast.LENGTH_LONG).show();
+            if(running==0) {
+
+                runner.start();
+                startUiUpdateThread();
+                processor.start();
+                calibrater.start();
+
+                running=1;
+            }
+            if(!runner.isAlive()){
+                runner.start();
+            }
+
+        }
+        else if (run==true){
+            buttonStart.setText("START");
+            run=false;
+            Toast.makeText(getActivity(),"Stopped",Toast.LENGTH_LONG).show();
+            textStatus.setText(" STOPPED");
+            textStatus.setTextColor(Color.RED);
+
+        }
+
+    }
 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.buttonPicture: {
-
+                startStop();
             }
-            if (run == false) {
-                if(!go)
-                    go=true;
 
-                run = true;
-                buttonStart.setText("STOP");
-
-
-                textStatus.setText(" Running");
-                textStatus.setTextColor(Color.GREEN);
-                Toast.makeText(getActivity(),"Starting Data Collection",Toast.LENGTH_LONG).show();
-                if(running==0) {
-
-                    runner.start();
-                    startUiUpdateThread();
-                    processor.start();
-
-                    running=1;
-                }
-            }
-            else if (run==true){
-                buttonStart.setText("START");
-                run=false;
-                Toast.makeText(getActivity(),"Stopped",Toast.LENGTH_LONG).show();
-                textStatus.setText(" STOPPED");
-                textStatus.setTextColor(Color.RED);
-
-            }
 
             break;
 
