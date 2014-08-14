@@ -23,6 +23,8 @@ package com.matthewplewa.cosmicraydetector.decov2;
 public class CameraActivity extends Activity {
 
     @Override
+
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
@@ -30,6 +32,7 @@ public class CameraActivity extends Activity {
             getFragmentManager().beginTransaction()
                     .replace(R.id.container, Camera2BasicFragment.newInstance())
                     .commit();
+
         }
     }
 
