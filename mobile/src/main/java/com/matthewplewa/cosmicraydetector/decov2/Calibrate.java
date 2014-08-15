@@ -71,7 +71,7 @@ public class Calibrate extends Thread{
          */
 
 
-        if(done <25){
+        if(done <35){
 
 
 
@@ -83,7 +83,7 @@ public class Calibrate extends Thread{
             bits = BitmapFactory.decodeByteArray(bytes,0,bytes.length,bitmapOptions);
             Bitmap bit = bits.copy(Bitmap.Config.ARGB_8888,true);
             // we want to scale the image down to something that will be usable and able to be processed alot faster
-
+            bits.recycle();
             bit =  Bitmap.createScaledBitmap(bit,(int) (bit.getWidth()/scaleX),(int)(bit.getHeight()/scaleY),false);
             int hight = bit.getHeight();
 
@@ -141,16 +141,16 @@ public class Calibrate extends Thread{
         by adding one to each scale factor we make it able to compensate.
          */
 
-        if(done==24){
-            scaleY++;
-            scaleX++;
+        if(done==34){
+            scaleY+=1;
+            scaleX+=1;
         }
 
         /*
         Now we have to find out what the threshold should be inorder to ajust for the sensors noise level.
          */
 
-        if(done>24&&done<50){
+        if(done>34&&done<60){
 
 
             if(DEBUG) Log.i(tag, "taking image");
@@ -162,7 +162,7 @@ public class Calibrate extends Thread{
             bits = BitmapFactory.decodeByteArray(bytes,0,bytes.length,bitmapOptions);//makes a non scalable bitmap
             Bitmap bit = bits.copy(Bitmap.Config.ARGB_8888,true);// this makes it so that we can scale it.
             // we want to scale the image down to something that will be usable and able to be processed alot faster
-
+            bits.recycle();
             bit =  Bitmap.createScaledBitmap(bit,(int) (bit.getWidth()/scaleX),(int)(bit.getHeight()/scaleY),false);
             if(DEBUG)Log.i(tag,"decoded");
             int hight = bit.getHeight();
@@ -197,10 +197,11 @@ public class Calibrate extends Thread{
                 }
             }
             go=true;
+            bit.recycle();
 
         }
 
-        if (done >= 75){
+        if (done >= 61){
             DataProcessor.scaleY=scaleY;
             DataProcessor.scaleX=scaleX;
             DataProcessor.rThresh=rTemp+20;
@@ -225,10 +226,12 @@ public class Calibrate extends Thread{
 
                 if(bitsList.size()>0)
                     calibrate();
+                Camera2BasicFragment.inQuaue=bitsList.size();
 
             }
 
         }
+
 
     }
 

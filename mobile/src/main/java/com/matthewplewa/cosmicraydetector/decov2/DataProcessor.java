@@ -37,12 +37,15 @@ public class DataProcessor extends Thread {
     public void setImage(byte[] bytes) {
 
         paths.add(bytes);
-        ready=true;
+        go=true;
         if(!running) {
             go = true;
             running = true;
         }
         if(DEBUG)Log.i(tag,paths.size()+" in Queue. is long running? "+longProcess );
+        Camera2BasicFragment.inQuaue=paths.size();//tells Camera2BasicFragment number in q so that
+                                                   // uiupdater can update properly.
+
 
 
     }
@@ -107,7 +110,7 @@ public class DataProcessor extends Thread {
     }
     Bitmap bits;
     String tag = "processor";
-    public static double scaleX=11;// if you want to change the scale (which will have to be changed in the calibration protion of the set up (not done) you need to change here TODO
+    public static double scaleX=11;// if you want to change the scale (which will have to be changed in the calibration protion of the set up (not done) <done
     public static double scaleY=11;
     public static int rThresh=100;
     public static int gThresh=100;
@@ -126,6 +129,7 @@ public class DataProcessor extends Thread {
         bitmapOptions.inPreferredConfig= Bitmap.Config.ARGB_8888;
         bits = BitmapFactory.decodeByteArray(bytes,0,bytes.length,bitmapOptions);
         Bitmap bit = bits.copy(Bitmap.Config.ARGB_8888,true);
+
         // we want to scale the image down to something that will be usable and able to be processed alot faster
 
         bit =  Bitmap.createScaledBitmap(bit,(int) (bit.getWidth()/scaleX),(int)(bit.getHeight()/scaleY),false);
@@ -178,10 +182,12 @@ public class DataProcessor extends Thread {
             longProcessor(bits,bytes);
         }
 
-        Camera2BasicFragment.inQuaue=paths.size();
+
         if(DEBUG)Log.i(tag,scaleX+","+scaleY+","+bit.getWidth()+","+bit.getHeight());
-        go=true;
+
         bit.recycle();
+        bits.recycle();
+        ready=true;
 
     }
 
@@ -225,6 +231,8 @@ public class DataProcessor extends Thread {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
+                        longProcess=false;
+                        return;//this should short circut the mthod to prevent needless processing
                     }
                 }
                 if(r>rTemp)
@@ -239,7 +247,8 @@ public class DataProcessor extends Thread {
 
         }
 
-        if(fineGood&&fullNumPix>8){
+        if(fineGood&&fullNumPix>8){//Im paranoid this is comnpletely unneeded but it makes me feel better
+                                    //it will catch any events that arnt caught cusing the return to break us.
             try {
                 save(bits);
             } catch (IOException e) {
@@ -281,8 +290,15 @@ public class DataProcessor extends Thread {
             while(true) {
 
                 while(go&&ready) {
-                    go=false;
+
                     process();
+                    if(paths.size()==0){
+                        go=false;
+                    }
+                    if(paths.size()>30){
+                        paths.clear();
+                        go=false;
+                    }
 
                 }
 

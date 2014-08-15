@@ -78,6 +78,11 @@ public class WorkAround extends Activity {
             Intent intent = new Intent(activity,CameraActivity.class);
 
             startActivity(intent);
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
             Camera2BasicFragment.restarted=true;
 
