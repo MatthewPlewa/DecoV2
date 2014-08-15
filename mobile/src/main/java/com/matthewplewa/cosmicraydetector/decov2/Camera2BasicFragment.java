@@ -166,6 +166,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
         boolean take;
         public void setbool(boolean b){
+
             take=b;
         }
         @Override
@@ -173,8 +174,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
             boolean tr = true;
             while (tr) {
-
-                while (!go||!run||restarted) {
+                if(restarted) {
                     try {
                         Thread.sleep(5000);//this will fix all the problems with it not being ready when it starts;
                         restarted=false;
@@ -183,7 +183,17 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
                     }
                 }
-                if(done-initial>=1500){//this will open a new activity that will then reopen this activitiy.
+
+                while (!go||!run) {
+                    try {
+                        Thread.sleep(100);
+
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+
+                    }
+                }
+                if(done-initial>=1000){//this will open a new activity that will then reopen this activitiy.
                     Intent workaround = new Intent(getActivity(),WorkAround.class);
                     startActivity(workaround);
                     getActivity().finish();
@@ -415,7 +425,8 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             initial=tall[0];
 
             numEvents= tall[1];
-
+            if(tall[2]==1)
+                restarted=true;
 
             //view.findViewById(R.id.info).setOnClickListener(this);
         }
