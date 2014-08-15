@@ -225,7 +225,7 @@ public class DataProcessor extends Thread {
                 if (r > rThresh||b>bThresh||g>gThresh ) {
                     fineGood = true;
                     fullNumPix++;
-                    if(fullNumPix>8){
+                    if(fullNumPix>3){
                         try {
                             save(bits);
                         } catch (IOException e) {
@@ -247,7 +247,7 @@ public class DataProcessor extends Thread {
 
         }
 
-        if(fineGood&&fullNumPix>8){//Im paranoid this is comnpletely unneeded but it makes me feel better
+        if(fineGood&&fullNumPix>3){//Im paranoid this is comnpletely unneeded but it makes me feel better
                                     //it will catch any events that arnt caught cusing the return to break us.
             try {
                 save(bits);
