@@ -704,14 +704,14 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
                         if(DEBUG)Log.i("tag","Passed Image");
                         /////////////////////////////////////////////////////////////////////
-                        try {//  THIS IS ONLY FOR TESTING OF THE IMAGE FILTER THIS MUST BE REMOVED BEFORE DISTROBUTION TODO
+                        /*try {//  THIS IS ONLY FOR TESTING OF THE IMAGE FILTER THIS MUST BE REMOVED BEFORE DISTROBUTION TODO
                             save(bytes);
                         } catch (IOException e) {
                             e.printStackTrace();
-                        }
+                        }*/
                         ////////////////////////////////////////////////////////////////////
 
-                       if (calibrating&&!restarted) {
+                       if (calibrating) {
 
                             calibrater.setImage(bytes);
 
