@@ -210,6 +210,8 @@ public class Calibrate extends Thread{
             if(DEBUG)Log.i(tag,"setting to false");
             Camera2BasicFragment.calibrating=false;
             calibrate=false;
+            done=0;
+
 
         }
         if(DEBUG)Log.i(tag,done+" in the calibrator");

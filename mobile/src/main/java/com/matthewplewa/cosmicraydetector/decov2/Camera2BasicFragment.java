@@ -82,7 +82,6 @@ import static android.hardware.camera2.CameraMetadata.CONTROL_AE_MODE_OFF;
 
 public class Camera2BasicFragment extends Fragment  implements View.OnClickListener  {
 
-
     final boolean DEBUG = true;
     final static boolean  RESTARTED=false;
     public static boolean restarted=false;
@@ -710,7 +709,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                             e.printStackTrace();
                         }*/
                         ////////////////////////////////////////////////////////////////////
-
+                        calibrating=false;
                        if (calibrating) {
 
                             calibrater.setImage(bytes);
