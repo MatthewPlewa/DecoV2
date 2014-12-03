@@ -112,9 +112,9 @@ public class DataProcessor extends Thread {
     String tag = "processor";
     public static double scaleX=11;// if you want to change the scale (which will have to be changed in the calibration protion of the set up (not done) <done
     public static double scaleY=11;
-    public static int rThresh=100;
-    public static int gThresh=100;
-    public static int bThresh=100;
+    public static int rThresh=80;
+    public static int gThresh=80;
+    public static int bThresh=80;
     public static boolean longProcess=false;
 
     public void process() {
@@ -225,15 +225,7 @@ public class DataProcessor extends Thread {
                 if (r > rThresh||b>bThresh||g>gThresh ) {
                     fineGood = true;
                     fullNumPix++;
-                    if(fullNumPix>3){
-                        try {
-                            save(bits);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        longProcess=false;
-                        return;//this should short circut the mthod to prevent needless processing
-                    }
+
                 }
                 if(r>rTemp)
                     rTemp=r;
