@@ -136,7 +136,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
     CaptureRequest.Builder captureBuilder;
     Handler backgroundHandler;
-    CameraCaptureSession.CaptureListener captureListener;
+    CameraCaptureSession.CaptureCallback CaptureCallback;
     Surface surface = null;
     boolean surfacegot=false;
     boolean changed=false;
@@ -339,9 +339,9 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
      */
     private boolean mOpeningCamera;
     /**
-     * {@link CameraDevice.StateListener} is called when {@link CameraDevice} changes its state.
+     * {@link android.hardware.camera2.CameraDevice.StateCallback} is called when {@link CameraDevice} changes its state.
      */
-    private CameraDevice.StateListener mStateListener = new CameraDevice.StateListener() {
+    private CameraDevice.StateCallback mStateCallback= new CameraDevice.StateCallback() {
 
         @Override
         public void onOpened(CameraDevice cameraDevice) {
@@ -395,11 +395,15 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
         textEventsFound = (TextView) getView().findViewById((R.id.textFound));
         textStatus = (TextView ) getView().findViewById(R.id.textStatus);
         textQueue = (TextView) getView().findViewById(R.id.textQueue);
-        buttonStart = (Button) getView().findViewById(R.id.buttonPicture);
+        buttonStart = (Button) getActivity().findViewById(R.id.buttonPicture);
+        if(buttonStart!=null) {
+            buttonStart.setOnClickListener(this);
+            Log.i("tag","onclick set");
+        }
+        Log.i("tag",buttonStart+" this");
         getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        view.findViewById(R.id.buttonPicture).setOnClickListener(this);
         int[] tall = new int[3];
-        Scanner scanner = null;
+        Scanner scanner;
         File thefile =new File(Environment.getExternalStorageDirectory(), "DECO/status/current.txt");
 
 
@@ -481,8 +485,8 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
 
             // We are opening the camera with a listener. When it is ready, onOpened of
-            // mStateListener is called.
-            manager.openCamera(cameraId, mStateListener, null);
+            // mStateCallbackis called.
+            manager.openCamera(cameraId, mStateCallback, null);
         } catch (CameraAccessException e) {
             Toast.makeText(activity, "Cannot access the camera.", Toast.LENGTH_SHORT).show();
             activity.finish();
@@ -515,7 +519,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
             // Here, we create a CameraCaptureSession for camera preview.
             mCameraDevice.createCaptureSession(Arrays.asList(surface),
-                    new CameraCaptureSession.StateListener() {
+                    new CameraCaptureSession.StateCallback() {
 
                         @Override
                         public void onConfigured(CameraCaptureSession cameraCaptureSession) {
@@ -819,8 +823,8 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             // This listener is called when the capture is completed.
             // Note that the JPEG data is not available in this listener, but in the
             // ImageReader.OnImageAvailableListener we created above.
-            captureListener =
-                    new CameraCaptureSession.CaptureListener() {
+            CaptureCallback =
+                    new CameraCaptureSession.CaptureCallback() {
 
                         @Override
                         public void onCaptureCompleted(CameraCaptureSession session,
@@ -840,11 +844,11 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
             // Finally, we can start a new CameraCaptureSession to take a picture.
             mCameraDevice.createCaptureSession(outputSurfaces,
-                    new CameraCaptureSession.StateListener() {
+                    new CameraCaptureSession.StateCallback() {
                         @Override
                         public void onConfigured(CameraCaptureSession session) {
                             try {
-                                session.capture(captureBuilder.build(), captureListener,
+                                session.capture(captureBuilder.build(), CaptureCallback,
                                         backgroundHandler);
                             } catch (CameraAccessException e) {
                                 e.printStackTrace();
@@ -914,11 +918,14 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
     }
 
     @Override
-    public void onClick(View view) {
+    public void onClick(View view) {// will have the button itself trigger the onclick
+
         switch (view.getId()) {
             case R.id.buttonPicture: {
                 startStop();
             }
+
+
 
 
             break;
