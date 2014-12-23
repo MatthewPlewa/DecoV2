@@ -16,9 +16,8 @@ package com.matthewplewa.cosmicraydetector.decov2;
  */
 
 
-
-        import android.app.Activity;
-        import android.os.Bundle;
+import android.app.Activity;
+import android.os.Bundle;
 
 public class CameraActivity extends Activity {
 
