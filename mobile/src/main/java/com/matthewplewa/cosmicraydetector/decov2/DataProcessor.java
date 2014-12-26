@@ -6,9 +6,11 @@ package com.matthewplewa.cosmicraydetector.decov2;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Environment;
 import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -36,7 +38,9 @@ public class DataProcessor extends Thread {
     boolean running=false;
     public void setImage(byte[] bytes) {
 
-        paths.add(bytes);
+
+        if(paths.size()<30)
+            paths.add(bytes);
         go=true;
         if(!running) {
             go = true;
@@ -84,7 +88,9 @@ public class DataProcessor extends Thread {
 
             //setting formate for file name
             String pic =""+ year+Month+Day+"_"+Hour+Min+Seconds;
-            File file = new File(Environment.getExternalStorageDirectory(),"DECO/EVENTS/");
+            File file = new File(Environment.getExternalStorageDirectory(),"DECO/EVENTS");
+
+
             if(!file.exists())
                 file.mkdirs(); //makes sure that the directory exists! if not then it makes it exist
 
@@ -96,7 +102,76 @@ public class DataProcessor extends Thread {
             output.flush();
             output.close();
             output=null;
-            Camera2BasicFragment.numEvents++;
+
+
+
+
+        } finally {
+            if (null != output) {
+                //utput.close();
+                //startPreview();
+
+            }
+        }
+    }
+    private void saveNCrop(Bitmap bit , int firstX, int firstY) throws IOException {
+
+        try {
+            if(DEBUG)Log.i(tag,"saving");
+            Calendar c = Calendar.getInstance();
+            int year = c.get(Calendar.YEAR);
+            int month= c.get(Calendar.MONTH)+1;
+            int day= (c.get(Calendar.DAY_OF_MONTH));
+            int hour= c.get(Calendar.HOUR_OF_DAY);
+            int min= c.get(Calendar.MINUTE);
+            int seconds = c.get(Calendar.SECOND);
+
+            //string convertion
+            String Month = month+"";
+            String Day = day+"";
+            String Hour = hour+"";
+            String Min= min+"";
+            String Seconds = seconds +"";
+
+
+            //keeps it in the correct formate
+            if(month<10)
+                Month = "0"+ month;
+            if(day<10)
+                Day = "0"+day;
+            if(hour <10)
+                Hour = "0"+hour;
+            if(min<10)
+                Min="0"+min;
+            if(seconds <10)
+                Seconds = "0"+seconds;
+
+            //setting formate for file name
+            String pic =""+ year+Month+Day+"_"+Hour+Min+Seconds;
+            File file = new File(Environment.getExternalStorageDirectory(),"DECO/EVENTS/CROP");
+
+
+            if(!file.exists())
+                file.mkdirs(); //makes sure that the directory exists! if not then it makes it exist
+
+            file = new File(Environment.getExternalStorageDirectory(),"DECO/EVENTS/CROP/"+pic+ ".jpg");
+            if(DEBUG)Log.i(tag,"file made");
+            Bitmap bmp=Bitmap.createBitmap(bit, firstX-20,firstY-20,200, 200);
+
+
+
+
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+            byte[] bytes = stream.toByteArray();
+
+            output = new FileOutputStream(file);
+            output.write(bytes);
+            if(DEBUG)Log.i(tag,"witten");
+            output.flush();
+            output.close();
+            output=null;
+
 
 
 
@@ -110,8 +185,8 @@ public class DataProcessor extends Thread {
     }
     Bitmap bits;
     String tag = "processor";
-    public static double scaleX=11;// if you want to change the scale (which will have to be changed in the calibration protion of the set up (not done) <done
-    public static double scaleY=11;
+    public static double scaleX=13;// if you want to change the scale (which will have to be changed in the calibration protion of the set up (not done) <done
+    public static double scaleY=13;
     public static int rThresh=80;
     public static int gThresh=80;
     public static int bThresh=80;
@@ -123,6 +198,7 @@ public class DataProcessor extends Thread {
         byte[] bytes = paths.get(0);
         if(DEBUG)Log.i(tag,"image in");
         paths.remove(0);
+        Log.i("pic data",bytes.toString()+"");
 
         if(DEBUG)Log.i(tag,"Decoding");
         BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
@@ -144,16 +220,29 @@ public class DataProcessor extends Thread {
         int numpix=0;
         boolean good = false;
 
+        int r,g,b,pixel;
+
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < hight; y++) {
                 int pic;
 
-
+                /*
                 String col = String.format("#%08X", bit.getPixel(x, y));
 
                 int r = Integer.parseInt(col.substring(3, 5), 16);
                 int b = Integer.parseInt(col.substring(5, 7), 16);
                 int g = Integer.parseInt(col.substring(7, 9), 16);
+
+
+                */
+
+                pixel=bit.getPixel(x,y);
+
+                r= Color.red(pixel);
+                g= Color.green(pixel);
+                b= Color.blue(pixel);
+
+
                 if (r > rThresh||b>bThresh||g>gThresh ) {
                     good = true;
                     numpix++;
@@ -197,11 +286,17 @@ public class DataProcessor extends Thread {
 
 
 
-    public void longProcessor(Bitmap map,byte[] bits){
+    public void longProcessor(Bitmap map,byte[] bits) {
         /*
         this will allow for full resolution proce3ssing of the images.
         should only be used for processing after the initial image filter has been used aka processor()
          */
+        int x1=0,y1=0;
+        try {
+            save(bits);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         longProcess=true;
         int hight = map.getHeight();
 
@@ -210,19 +305,32 @@ public class DataProcessor extends Thread {
         int gTemp=0;
         int bTemp=0;
         int fullNumPix=0;
+        int r,g,b,pixel;
         boolean fineGood = false;
 
         for (int x = 0; x < width; x+=2) {
             for (int y = 0; y < hight; y+=2) {
-                int pic;
+               // int pic;
 
-
+                /*
                 String col = String.format("#%08X", map.getPixel(x, y));
 
                 int r = Integer.parseInt(col.substring(3, 5), 16);
                 int b = Integer.parseInt(col.substring(5, 7), 16);
                 int g = Integer.parseInt(col.substring(7, 9), 16);
+                */
+                pixel=map.getPixel(x,y);
+
+                r= Color.red(pixel);
+                g= Color.green(pixel);
+                b= Color.blue(pixel);
+
+
+
+
                 if (r > rThresh||b>bThresh||g>gThresh ) {
+                    x1=x;
+                    y1=y;
                     fineGood = true;
                     fullNumPix++;
 
@@ -239,10 +347,17 @@ public class DataProcessor extends Thread {
 
         }
 
-        if(fineGood&&fullNumPix>3){//Im paranoid this is comnpletely unneeded but it makes me feel better
+        if(fineGood&&fullNumPix>50){//Im paranoid this is comnpletely unneeded but it makes me feel better
                                     //it will catch any events that arnt caught cusing the return to break us.
+
+            Camera2BasicFragment.numEvents++;
             try {
                 save(bits);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                saveNCrop(map,x1,y1);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -290,6 +405,7 @@ public class DataProcessor extends Thread {
                     if(paths.size()>30){
                         paths.clear();
                         go=false;
+                        Log.i("tag","dropped the queue");
                     }
 
                 }

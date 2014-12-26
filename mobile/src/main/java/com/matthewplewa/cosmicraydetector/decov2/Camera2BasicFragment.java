@@ -20,7 +20,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Color;
@@ -192,12 +191,12 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
                     }
                 }
-                if(done-initial>=1000){//this will open a new activity that will then reopen this activitiy.
-                    Intent workaround = new Intent(getActivity(),WorkAround.class);
-                    startActivity(workaround);
-                    getActivity().finish();
-                    go=false;
-                }
+                //if(done-initial>=1000){//this will open a new activity that will then reopen this activitiy.
+                //    Intent workaround = new Intent(getActivity(),WorkAround.class);
+                //    startActivity(workaround);
+                //    getActivity().finish();
+                //    go=false;
+                //}
 
 
                 while (go && run) {
@@ -630,9 +629,9 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             characteristics =
                     manager.getCameraCharacteristics(mCameraDevice.getId());
 
-            exposure =characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE).getUpper();//gets the upper exposure time suported by the camera object
-            //  exposure = exposure - Long.valueOf((long)10000);//reduces the exposure slightly inorder to prevent errors. Will try without. seems to be working without
-            // if(DEBUG)Log.i("tag", characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE) + "");
+            exposure =characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE).getUpper();//gets the upper exposure time suported by the camera object TODO
+            exposure = exposure - Long.valueOf((long)10000);//reduces the exposure slightly inorder to prevent errors. Will try without. seems to be working without
+            if(DEBUG)Log.i("tag", characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE) + "");
             Size[] jpegSizes = null;
             if (characteristics != null) {
                 jpegSizes = characteristics
@@ -655,17 +654,19 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             outputSurfaces.add(new Surface(mTextureView.getSurfaceTexture()));
 
 
+//TODO in here i want to make sure that it will work for legacy extentions!!!!!!!!!!!!
+
 
             // This is the CaptureRequest.Builder that we use to take a picture.
             captureBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
             captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,CONTROL_AE_MODE_OFF);
-            captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, exposure);
+            captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, exposure); //TODO reenable this
             captureBuilder.set(CaptureRequest.NOISE_REDUCTION_MODE,CaptureRequest.NOISE_REDUCTION_MODE_OFF);
             captureBuilder.set(CaptureRequest.BLACK_LEVEL_LOCK,false);// without it unlocked it might cause issues
             Range<Integer> sensitivity = characteristics.get(SENSOR_INFO_SENSITIVITY_RANGE);
             captureBuilder.set(CaptureRequest.SENSOR_SENSITIVITY,  characteristics.get(SENSOR_MAX_ANALOG_SENSITIVITY) );// TODO this should also be done in the claibrator but saved forever. This just looked nice for the nexus 5.... this must be less than SENSOR_MAX_ANALOG_SENSITIVITY
             if(DEBUG)Log.i("max analog sensitivity" ,""+characteristics.get(SENSOR_MAX_ANALOG_SENSITIVITY));
-           // captureBuilder.set(CaptureRequest.JPEG_QUALITY, Byte.valueOf(100+""));
+            captureBuilder.set(CaptureRequest.JPEG_QUALITY, Byte.valueOf(100+""));
             if(DEBUG)Log.i("tag",exposure.floatValue()+" <= exposure");
 
             surface = reader.getSurface();
@@ -713,7 +714,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                             e.printStackTrace();
                         }*/
                         ////////////////////////////////////////////////////////////////////
-                        calibrating=false;
+                        //calibrating=false;
                        if (calibrating) {
 
                             calibrater.setImage(bytes);

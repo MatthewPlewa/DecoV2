@@ -2,6 +2,7 @@ package com.matthewplewa.cosmicraydetector.decov2;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -88,7 +89,8 @@ public class Calibrate extends Thread{
             int hight = bit.getHeight();
 
             int width = bit.getWidth();
-
+            int r , g, b;
+            int pixel;
 
 
             for (int x = 0; x < width; x++) {
@@ -96,11 +98,17 @@ public class Calibrate extends Thread{
                     int pic;
 
 
-                    String col = String.format("#%08X", bit.getPixel(x, y));
+                   /* String col = String.format("#%08X", bit.getPixel(x, y));
 
                     int r = Integer.parseInt(col.substring(3, 5), 16);
                     int b = Integer.parseInt(col.substring(5, 7), 16);
                     int g = Integer.parseInt(col.substring(7, 9), 16);
+                    */
+                    pixel=bit.getPixel(x,y);
+
+                    r= Color.red(pixel);
+                    g= Color.green(pixel);
+                    b= Color.blue(pixel);
 
                 }
 
@@ -150,7 +158,7 @@ public class Calibrate extends Thread{
         Now we have to find out what the threshold should be inorder to ajust for the sensors noise level.
          */
 
-        if(done>34&&done<60){
+        if(done>34&&done<80){
 
 
             if(DEBUG) Log.i(tag, "taking image");
@@ -171,17 +179,25 @@ public class Calibrate extends Thread{
 
             int numpix=0;
             boolean good = false;
-
+            int r , g, b;
+            int pixel;
             for (int x = 0; x < width; x++) {
                 for (int y = 0; y < hight; y++) {
                     int pic;
 
 
-                    String col = String.format("#%08X", bit.getPixel(x, y));
+                    /*String col = String.format("#%08X", bit.getPixel(x, y));
 
-                    int r = Integer.parseInt(col.substring(3, 5), 16);
-                    int b = Integer.parseInt(col.substring(5, 7), 16);
-                    int g = Integer.parseInt(col.substring(7, 9), 16);
+                    r = Integer.parseInt(col.substring(3, 5), 16);
+                    b = Integer.parseInt(col.substring(5, 7), 16);
+                    g = Integer.parseInt(col.substring(7, 9), 16);
+                    */
+
+                    pixel=bit.getPixel(x,y);
+
+                    r= Color.red(pixel);
+                    g= Color.green(pixel);
+                    b= Color.blue(pixel);
 
                     if(r>rTemp)
                         rTemp=r;
@@ -201,7 +217,7 @@ public class Calibrate extends Thread{
 
         }
 
-        if (done >= 61){
+        if (done >= 81){
             DataProcessor.scaleY=scaleY;
             DataProcessor.scaleX=scaleX;
             DataProcessor.rThresh=rTemp+20;
