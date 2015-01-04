@@ -22,6 +22,7 @@ import android.app.Fragment;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
@@ -54,6 +55,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -131,6 +133,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
     TextView textStatus;
     TextView textEventsFound;
     TextView textQueue;
+    ImageView CroppedImage;
     Button buttonStart;
 
     CaptureRequest.Builder captureBuilder;
@@ -160,6 +163,8 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
     private boolean go=false;
     public static int numEvents=0;
     public static int inQuaue=0;
+    public static Bitmap croped=null;
+    public static boolean newCropped=false;
     Runnable runable = new Runnable() {
 
         boolean take;
@@ -255,6 +260,9 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                             if(!runner.isAlive()&&running==1){
                                 runner.start();
                             }
+
+                            if(newCropped=true)
+                                CroppedImage.setImageBitmap(croped);
 
                             if(!calibrating){
                                 textStatus.setText(" Running");
@@ -394,6 +402,9 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
         textEventsFound = (TextView) getView().findViewById((R.id.textFound));
         textStatus = (TextView ) getView().findViewById(R.id.textStatus);
         textQueue = (TextView) getView().findViewById(R.id.textQueue);
+        CroppedImage = (ImageView) getView().findViewById(R.id.imageCropped);
+
+
         buttonStart = (Button) getActivity().findViewById(R.id.buttonPicture);
         if(buttonStart!=null) {
             buttonStart.setOnClickListener(this);
@@ -630,7 +641,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                     manager.getCameraCharacteristics(mCameraDevice.getId());
 
             exposure =characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE).getUpper();//gets the upper exposure time suported by the camera object TODO
-            exposure = exposure - Long.valueOf((long)10000);//reduces the exposure slightly inorder to prevent errors. Will try without. seems to be working without
+            //exposure = exposure - Long.valueOf((long)10000);//reduces the exposure slightly inorder to prevent errors. Will try without. seems to be working without
             if(DEBUG)Log.i("tag", characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE) + "");
             Size[] jpegSizes = null;
             if (characteristics != null) {
@@ -667,7 +678,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             captureBuilder.set(CaptureRequest.SENSOR_SENSITIVITY,  characteristics.get(SENSOR_MAX_ANALOG_SENSITIVITY) );// TODO this should also be done in the claibrator but saved forever. This just looked nice for the nexus 5.... this must be less than SENSOR_MAX_ANALOG_SENSITIVITY
             if(DEBUG)Log.i("max analog sensitivity" ,""+characteristics.get(SENSOR_MAX_ANALOG_SENSITIVITY));
             captureBuilder.set(CaptureRequest.JPEG_QUALITY, Byte.valueOf(100+""));
-            if(DEBUG)Log.i("tag",exposure.floatValue()+" <= exposure");
+            if(DEBUG)Log.i("tag",(1/(exposure.doubleValue()*.000000001))+" <= exposure");
 
             surface = reader.getSurface();
             if(!surface.isValid()){
@@ -697,7 +708,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                         image = reader.acquireLatestImage();//Pulls your image from the image reader
 
                         buffer = image.getPlanes()[0].getBuffer();//Each image has diffrent plains you have to pull from the first plain aka index of 0
-                        bytes = new byte[buffer.capacity()];
+                         bytes = new byte[buffer.capacity()];
 
                         buffer.get(bytes);
                         //we do not want to save here anymore because it just causes efficancy issues
@@ -708,11 +719,13 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
                         if(DEBUG)Log.i("tag","Passed Image");
                         /////////////////////////////////////////////////////////////////////
-                        /*try {//  THIS IS ONLY FOR TESTING OF THE IMAGE FILTER THIS MUST BE REMOVED BEFORE DISTROBUTION TODO
+                       try {//  THIS IS ONLY FOR TESTING OF THE IMAGE FILTER THIS MUST BE REMOVED BEFORE DISTROBUTION TODO
                             save(bytes);
                         } catch (IOException e) {
                             e.printStackTrace();
-                        }*/
+                        }
+
+
                         ////////////////////////////////////////////////////////////////////
                         //calibrating=false;
                        if (calibrating) {

@@ -29,7 +29,8 @@
         android:layout_height="75dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true"
-        android:background="#4285f4">
+        android:background="#4285f4"
+        android:id="@+id/frameLayout">
 
         <Button
             android:id="@+id/buttonPicture"
@@ -103,6 +104,148 @@
 
 
     </FrameLayout>
+
+    <ImageView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:id="@+id/imageCropped"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_above="@+id/frameLayout"
+        android:focusable="false"
+        android:scaleType="fitXY"
+        android:cropToPadding="false" />
+
+    <ToggleButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New ToggleButton"
+        android:id="@+id/toggleAutoOn"
+        android:layout_below="@+id/textAutoCal"
+        android:layout_centerHorizontal="true"
+        android:textOff="Off"
+        android:textOn="On"
+        android:enabled="true"
+        android:checked="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Auto Calibrate"
+        android:id="@+id/textAutoCal"
+        android:singleLine="true"
+        android:textColor="#ffffffff"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:phoneNumber="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Set Config"
+        android:id="@+id/buttonConfig"
+        android:layout_below="@+id/textAutoCal"
+        android:layout_toEndOf="@+id/toggleAutoOn" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:ems="10"
+        android:id="@+id/editr1"
+        android:layout_below="@+id/toggleAutoOn"
+        android:layout_alignParentStart="true"
+        android:layout_toStartOf="@+id/textAutoCal"
+        android:background="#ffffffff"
+        style="  "
+        android:autoText="false"
+        android:outlineProvider="bounds"
+        android:text="Fast R" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:ems="10"
+        android:id="@+id/editg1"
+        android:shadowColor="#ffffffff"
+        android:background="#ffffffff"
+        android:layout_below="@+id/editr1"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="10dp"
+        android:layout_alignEnd="@+id/editr1"
+        android:text="Fast G" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:ems="10"
+        android:id="@+id/editb1"
+        android:shadowColor="#ffffffff"
+        android:background="#ffffffff"
+        android:layout_below="@+id/editg1"
+        android:layout_alignParentStart="true"
+        android:layout_alignEnd="@+id/editg1"
+        android:layout_marginTop="10dp"
+        android:text="Fast B" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:ems="10"
+        android:id="@+id/editr2"
+        android:shadowColor="#ffffffff"
+        android:background="#ffffffff"
+        android:layout_below="@+id/editb1"
+        android:layout_alignParentStart="true"
+        android:layout_alignEnd="@+id/editb1"
+        android:layout_marginTop="20dp"
+        android:text="Slow R" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:ems="10"
+        android:id="@+id/editg2"
+        android:shadowColor="#ffffffff"
+        android:background="#ffffffff"
+        android:layout_below="@+id/editr2"
+        android:layout_alignParentStart="true"
+        android:layout_alignEnd="@+id/editr2"
+        android:layout_marginTop="10dp"
+        android:text="Slow G" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:ems="10"
+        android:id="@+id/editb2"
+        android:shadowColor="#ffffffff"
+        android:background="#ffffffff"
+        android:layout_below="@+id/editg2"
+        android:layout_alignParentStart="true"
+        android:layout_alignEnd="@+id/editg2"
+        android:layout_marginTop="10dp"
+        android:text="Slow B" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:ems="10"
+        android:id="@+id/editScale"
+        android:shadowColor="#ffffffff"
+        android:background="#ffffffff"
+        android:layout_below="@+id/editb2"
+        android:layout_alignParentStart="true"
+        android:layout_alignEnd="@+id/editb2"
+        android:layout_marginTop="20dp"
+        android:text="Fast Scale" />
 
 
 </RelativeLayout>

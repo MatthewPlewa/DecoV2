@@ -114,6 +114,68 @@ public class DataProcessor extends Thread {
             }
         }
     }
+
+    private void savesample(byte[] bytes) throws IOException {
+
+        try {
+            if(DEBUG)Log.i(tag,"saving");
+            Calendar c = Calendar.getInstance();
+            int year = c.get(Calendar.YEAR);
+            int month= c.get(Calendar.MONTH)+1;
+            int day= (c.get(Calendar.DAY_OF_MONTH));
+            int hour= c.get(Calendar.HOUR_OF_DAY);
+            int min= c.get(Calendar.MINUTE);
+            int seconds = c.get(Calendar.SECOND);
+
+            //string convertion
+            String Month = month+"";
+            String Day = day+"";
+            String Hour = hour+"";
+            String Min= min+"";
+            String Seconds = seconds +"";
+
+
+            //keeps it in the correct formate
+            if(month<10)
+                Month = "0"+ month;
+            if(day<10)
+                Day = "0"+day;
+            if(hour <10)
+                Hour = "0"+hour;
+            if(min<10)
+                Min="0"+min;
+            if(seconds <10)
+                Seconds = "0"+seconds;
+
+            //setting formate for file name
+            String pic =""+ year+Month+Day+"_"+Hour+Min+Seconds;
+            File file = new File(Environment.getExternalStorageDirectory(),"DECO/EVENTS/SAMPLE");
+
+
+            if(!file.exists())
+                file.mkdirs(); //makes sure that the directory exists! if not then it makes it exist
+
+            file = new File(Environment.getExternalStorageDirectory(),"DECO/EVENTS/SAMPLE/"+pic+ ".jpg");
+            if(DEBUG)Log.i(tag,"file made");
+            output = new FileOutputStream(file);
+            output.write(bytes);
+            if(DEBUG)Log.i(tag,"witten");
+            output.flush();
+            output.close();
+            output=null;
+
+
+
+
+        } finally {
+            if (null != output) {
+                //utput.close();
+                //startPreview();
+
+            }
+        }
+    }
+
     private void saveNCrop(Bitmap bit , int firstX, int firstY) throws IOException {
 
         try {
@@ -156,8 +218,11 @@ public class DataProcessor extends Thread {
 
             file = new File(Environment.getExternalStorageDirectory(),"DECO/EVENTS/CROP/"+pic+ ".jpg");
             if(DEBUG)Log.i(tag,"file made");
-            Bitmap bmp=Bitmap.createBitmap(bit, firstX-20,firstY-20,200, 200);
-
+            Bitmap bmp = bit;
+            if(firstX-20>0&&firstY-20>0&&firstX+200<bit.getWidth()&&firstY+200<bit.getHeight())
+                bmp = Bitmap.createBitmap(bit, firstX - 20, firstY - 20, 200, 200);
+            Camera2BasicFragment.croped = bmp;
+            Camera2BasicFragment.newCropped = true;
 
 
 
@@ -171,6 +236,8 @@ public class DataProcessor extends Thread {
             output.flush();
             output.close();
             output=null;
+            bmp.recycle();
+            bit.recycle();
 
 
 
@@ -185,8 +252,8 @@ public class DataProcessor extends Thread {
     }
     Bitmap bits;
     String tag = "processor";
-    public static double scaleX=13;// if you want to change the scale (which will have to be changed in the calibration protion of the set up (not done) <done
-    public static double scaleY=13;
+    public static double scaleX=5;// if you want to change the scale (which will have to be changed in the calibration protion of the set up (not done) <done
+    public static double scaleY=5;
     public static int rThresh=80;
     public static int gThresh=80;
     public static int bThresh=80;
@@ -194,11 +261,11 @@ public class DataProcessor extends Thread {
 
     public void process() {
         ready=false;
+        if(DEBUG)Log.i(tag,"settings "+rThresh+" "+gThresh+" "+bThresh);
         if(DEBUG)Log.i(tag,"taking image");
         byte[] bytes = paths.get(0);
         if(DEBUG)Log.i(tag,"image in");
         paths.remove(0);
-        Log.i("pic data",bytes.toString()+"");
 
         if(DEBUG)Log.i(tag,"Decoding");
         BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
@@ -267,7 +334,7 @@ public class DataProcessor extends Thread {
         if(DEBUG)Log.i(tag,"Max r g b values"+rTemp+","+gTemp+","+bTemp);
         if(DEBUG)Log.i(tag,"image done");
         if(DEBUG)Log.i(tag,good+"");
-        if (good&&numpix<200) {//delete if not above cut
+        if (good&&numpix<(hight*width/3)&&numpix>2) {//TODO fix this so that having to many
             longProcessor(bits,bytes);
         }
 
@@ -293,7 +360,7 @@ public class DataProcessor extends Thread {
          */
         int x1=0,y1=0;
         try {
-            save(bits);
+            savesample(bits);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -308,8 +375,8 @@ public class DataProcessor extends Thread {
         int r,g,b,pixel;
         boolean fineGood = false;
 
-        for (int x = 0; x < width; x+=2) {
-            for (int y = 0; y < hight; y+=2) {
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < hight; y++) {
                // int pic;
 
                 /*
@@ -347,10 +414,13 @@ public class DataProcessor extends Thread {
 
         }
 
-        if(fineGood&&fullNumPix>50){//Im paranoid this is comnpletely unneeded but it makes me feel better
+        if(fineGood&&fullNumPix>10){//Im paranoid this is comnpletely unneeded but it makes me feel better
+
+
                                     //it will catch any events that arnt caught cusing the return to break us.
 
             Camera2BasicFragment.numEvents++;
+            //when saveNcrop is called the cropped image will be sent to the camera2basicfragment inor
             try {
                 save(bits);
             } catch (IOException e) {
@@ -405,7 +475,7 @@ public class DataProcessor extends Thread {
                     if(paths.size()>30){
                         paths.clear();
                         go=false;
-                        Log.i("tag","dropped the queue");
+                        if(DEBUG)Log.i("tag","dropped the queue");
                     }
 
                 }

@@ -27,8 +27,8 @@ public class Calibrate extends Thread{
     boolean running=false;
     int done=0;
     boolean DEBUG=true;
-    double scaleX=11;
-    double scaleY=11;
+    double scaleX=5;
+    double scaleY=5;
     int rTemp=0;
     int gTemp=0;
     int bTemp=0;
@@ -60,7 +60,7 @@ public class Calibrate extends Thread{
     public void calibrate(){
         byte[] bytes = bitsList.get(0);
         bitsList.remove(0);
-        Log.i(tag,"calibrating"+done);
+        if(DEBUG)Log.i(tag,"calibrating"+done);
         go=false;
         done++;
 
@@ -150,8 +150,8 @@ public class Calibrate extends Thread{
          */
 
         if(done==34){
-            scaleY+=1;
-            scaleX+=1;
+            scaleY+=2;
+            scaleX+=2;
         }
 
         /*
@@ -220,9 +220,9 @@ public class Calibrate extends Thread{
         if (done >= 81){
             DataProcessor.scaleY=scaleY;
             DataProcessor.scaleX=scaleX;
-            DataProcessor.rThresh=rTemp+20;
-            DataProcessor.gThresh=gTemp+20;
-            DataProcessor.bThresh=bTemp+20;
+            DataProcessor.rThresh=rTemp;
+            DataProcessor.gThresh=gTemp;
+            DataProcessor.bThresh=bTemp;
             if(DEBUG)Log.i(tag,"setting to false");
             Camera2BasicFragment.calibrating=false;
             calibrate=false;
