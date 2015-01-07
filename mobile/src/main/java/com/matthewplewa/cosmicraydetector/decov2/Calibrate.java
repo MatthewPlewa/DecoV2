@@ -223,6 +223,9 @@ public class Calibrate extends Thread{
             DataProcessor.rThresh=rTemp;
             DataProcessor.gThresh=gTemp;
             DataProcessor.bThresh=bTemp;
+            DataProcessor.r2Thresh=rTemp;
+            DataProcessor.g2Thresh=gTemp;
+            DataProcessor.b2Thresh=bTemp;
             if(DEBUG)Log.i(tag,"setting to false");
             Camera2BasicFragment.calibrating=false;
             calibrate=false;

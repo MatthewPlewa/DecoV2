@@ -257,6 +257,9 @@ public class DataProcessor extends Thread {
     public static int rThresh=80;
     public static int gThresh=80;
     public static int bThresh=80;
+    public static int r2Thresh=80;
+    public static int g2Thresh=80;
+    public static int b2Thresh=80;
     public static boolean longProcess=false;
 
     public void process() {
@@ -395,7 +398,7 @@ public class DataProcessor extends Thread {
 
 
 
-                if (r > rThresh||b>bThresh||g>gThresh ) {
+                if (r > r2Thresh||b>b2Thresh||g>g2Thresh ) {
                     x1=x;
                     y1=y;
                     fineGood = true;

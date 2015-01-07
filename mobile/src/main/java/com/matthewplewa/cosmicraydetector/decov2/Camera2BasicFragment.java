@@ -55,9 +55,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -81,11 +83,11 @@ import static android.hardware.camera2.CameraCharacteristics.SENSOR_MAX_ANALOG_S
 import static android.hardware.camera2.CameraMetadata.CONTROL_AE_MODE_OFF;
 
 
-public class Camera2BasicFragment extends Fragment  implements View.OnClickListener  {
+public class Camera2BasicFragment extends Fragment implements View.OnClickListener {
 
     final boolean DEBUG = true;
-    final static boolean  RESTARTED=false;
-    public static boolean restarted=false;
+    final static boolean RESTARTED = false;
+    public static boolean restarted = false;
 
     /**
      * Conversion from screen rotation to JPEG orientation.
@@ -105,9 +107,9 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
        I cannot seem to find where these ojects are being created saying open that is causing the "too many files open" error, so I am just going
        to move all of the file declorations to outside the take picture method.
         */
-    int preped=0;
-    boolean run=false;
-    int done=0;
+    int preped = 0;
+    boolean run = false;
+    int done = 0;
     byte[] bytes;
     ByteBuffer buffer;
     Calendar c;
@@ -128,22 +130,25 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
     ImageReader reader;
     List<Surface> outputSurfaces;
     TimeZone z;
-    Activity activity=getActivity();
+    Activity activity = getActivity();
     TextView textImgsDone;
     TextView textStatus;
     TextView textEventsFound;
     TextView textQueue;
     ImageView CroppedImage;
     Button buttonStart;
+    Button ButtonConfig;
+    ToggleButton AutoCal;
+    EditText Editr1, Editr2, Editb1, Editb2, Editg1, Editg2, Editscale;
 
     CaptureRequest.Builder captureBuilder;
     Handler backgroundHandler;
     CameraCaptureSession.CaptureCallback CaptureCallback;
     Surface surface = null;
-    boolean surfacegot=false;
-    boolean changed=false;
-    int running =0;
-    public static boolean calibrating=true;
+    boolean surfacegot = false;
+    boolean changed = false;
+    int running = 0;
+    public static boolean calibrating = true;
     /**
      * An {@link AutoFitTextureView} for camera preview.
      */
@@ -160,34 +165,36 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
      * A reference to the opened {@link android.hardware.camera2.CameraDevice}.
      */
     private CameraDevice mCameraDevice;
-    private boolean go=false;
-    public static int numEvents=0;
-    public static int inQuaue=0;
-    public static Bitmap croped=null;
-    public static boolean newCropped=false;
+    private boolean go = false;
+    public static int numEvents = 0;
+    public static int inQuaue = 0;
+    public static Bitmap croped = null;
+    public static boolean newCropped = false;
     Runnable runable = new Runnable() {
 
         boolean take;
-        public void setbool(boolean b){
 
-            take=b;
+        public void setbool(boolean b) {
+
+            take = b;
         }
+
         @Override
         public void run() {
 
             boolean tr = true;
             while (tr) {
-                if(restarted) {
+                if (restarted) {
                     try {
                         Thread.sleep(5000);//this will fix all the problems with it not being ready when it starts;
-                        restarted=false;
+                        restarted = false;
                     } catch (InterruptedException e) {
                         e.printStackTrace();
 
                     }
                 }
 
-                while (!go||!run) {
+                while (!go || !run) {
                     try {
                         Thread.sleep(100);
 
@@ -207,7 +214,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                 while (go && run) {
 
 
-                    go=false;
+                    go = false;
                     if (preped == 0) {//the looper has to be prepared before you can start the looper that is in the takePicture() method
                         Looper.prepare();
                         preped = 1;
@@ -227,11 +234,6 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                     takePicture();//starts the image on the main thread NOT this thread.
 
 
-
-
-
-
-
                 }
             }
         }
@@ -242,34 +244,34 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
         final Handler handler = new Handler();
         Runnable runnable = new Runnable() {
             private long startTime = System.currentTimeMillis();
+
             public void run() {
                 boolean keep = true;
                 while (keep) {
                     try {
                         Thread.sleep(5000);
-                    }
-                    catch (InterruptedException e) {
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    handler.post(new Runnable(){
+                    handler.post(new Runnable() {
                         public void run() {
                             textImgsDone.setText(" " + done + "");
                             textEventsFound.setText(numEvents + " ");
                             textQueue.setText(inQuaue + " In Queue ");
 
-                            if(!runner.isAlive()&&running==1){
+                            if (!runner.isAlive() && running == 1) {
                                 runner.start();
                             }
 
-                            if(newCropped=true)
+                            if (newCropped = true)
                                 CroppedImage.setImageBitmap(croped);
 
-                            if(!calibrating){
+                            if (!calibrating) {
                                 textStatus.setText(" Running");
                             }
                             BufferedWriter writer = null;
                             if (changed) {
-                                changed=false;
+                                changed = false;
                                 try {
 
 
@@ -277,7 +279,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                                     if (!file.exists()) {
                                         file.mkdirs();
                                     }
-                                    if(DEBUG)Log.i("write", "making file");
+                                    if (DEBUG) Log.i("write", "making file");
                                     file = new File(Environment.getExternalStorageDirectory(), "DECO/status/current.txt");
 
                                     writer = new BufferedWriter(new FileWriter(file));
@@ -288,9 +290,9 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                                     writer.write(numEvents + "");
                                     writer.newLine();
                                     if (run)//this will tell this activity if it should start again.
-                                        writer.write(1+"");
-                                    if(!run)
-                                        writer.write(0+"");
+                                        writer.write(1 + "");
+                                    if (!run)
+                                        writer.write(0 + "");
                                     writer.close();
 
                                 } catch (IOException e) {
@@ -348,7 +350,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
     /**
      * {@link android.hardware.camera2.CameraDevice.StateCallback} is called when {@link CameraDevice} changes its state.
      */
-    private CameraDevice.StateCallback mStateCallback= new CameraDevice.StateCallback() {
+    private CameraDevice.StateCallback mStateCallback = new CameraDevice.StateCallback() {
 
         @Override
         public void onOpened(CameraDevice cameraDevice) {
@@ -400,24 +402,43 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
         mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
         textImgsDone = (TextView) getView().findViewById(R.id.textDone);
         textEventsFound = (TextView) getView().findViewById((R.id.textFound));
-        textStatus = (TextView ) getView().findViewById(R.id.textStatus);
+        textStatus = (TextView) getView().findViewById(R.id.textStatus);
         textQueue = (TextView) getView().findViewById(R.id.textQueue);
         CroppedImage = (ImageView) getView().findViewById(R.id.imageCropped);
+        AutoCal = (ToggleButton) getView().findViewById(R.id.toggleAutoOn);
+        ButtonConfig = (Button) getView().findViewById(R.id.buttonConfig);
+        Editb1 = (EditText) getView().findViewById(R.id.editb1);
+        Editr1 = (EditText) getView().findViewById(R.id.editr1);
+        Editg1 = (EditText) getView().findViewById(R.id.editg1);
+        Editb2 = (EditText) getView().findViewById(R.id.editb2);
+        Editr2 = (EditText) getView().findViewById(R.id.editr2);
+        Editg2 = (EditText) getView().findViewById(R.id.editg2);
+        Editscale = (EditText) getView().findViewById(R.id.editScale);
 
 
         buttonStart = (Button) getActivity().findViewById(R.id.buttonPicture);
-        if(buttonStart!=null) {
+        if (buttonStart != null) {
             buttonStart.setOnClickListener(this);
-            Log.i("tag","onclick set");
+            AutoCal.setOnClickListener(this);
+            ButtonConfig.setOnClickListener(this);
+            Log.i("tag", "onclick set");
         }
-        Log.i("tag",buttonStart+" this");
+        ButtonConfig.setVisibility(View.INVISIBLE);
+        Editscale.setVisibility(View.INVISIBLE);
+        Editr1.setVisibility(View.INVISIBLE);
+        Editr2.setVisibility(View.INVISIBLE);
+        Editg1.setVisibility(View.INVISIBLE);
+        Editg2.setVisibility(View.INVISIBLE);
+        Editb1.setVisibility(View.INVISIBLE);
+        Editb2.setVisibility(View.INVISIBLE);
+        Log.i("tag", buttonStart + " this");
         getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         int[] tall = new int[3];
         Scanner scanner;
-        File thefile =new File(Environment.getExternalStorageDirectory(), "DECO/status/current.txt");
+        File thefile = new File(Environment.getExternalStorageDirectory(), "DECO/status/current.txt");
 
 
-        if(thefile.exists()) {
+        if (thefile.exists()) {
             try {
                 scanner = new Scanner(new File(Environment.getExternalStorageDirectory(), "DECO/status/current.txt"));
 
@@ -427,25 +448,25 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                     tall[i++] = scanner.nextInt();
                 }
                 scanner.close();
-                scanner=null;
+                scanner = null;
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
 
-            textImgsDone.setText(tall[0]+"");
-            textEventsFound.setText(tall[1]+"");
-            done=tall[0];
-            initial=tall[0];
+            textImgsDone.setText(tall[0] + "");
+            textEventsFound.setText(tall[1] + "");
+            done = tall[0];
+            initial = tall[0];
 
-            numEvents= tall[1];
-            if(tall[2]==1)
-                restarted=true;
+            numEvents = tall[1];
+            if (tall[2] == 1)
+                restarted = true;
 
             //view.findViewById(R.id.info).setOnClickListener(this);
         }
     }
 
-    int initial =0;
+    int initial = 0;
 
     @SuppressLint("Override")
     @Override
@@ -465,7 +486,6 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
     }
 
     /**
-     *
      * Opens a {@link CameraDevice}. The result is listened by `mStateListener`.
      */
     private void openCamera() {
@@ -501,7 +521,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             Toast.makeText(activity, "Cannot access the camera.", Toast.LENGTH_SHORT).show();
             activity.finish();
         }
-        if(restarted) {
+        if (restarted) {
             startStop();
 
         }
@@ -627,22 +647,20 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
     public void takePicture() {
 
 
-
-
         try {
             final Activity activity = getActivity();
             if (null == activity || null == mCameraDevice) {
                 return;
             }
-            manager =(CameraManager) activity.getSystemService(CAMERA_SERVICE);
+            manager = (CameraManager) activity.getSystemService(CAMERA_SERVICE);
 
             // Pick the best JPEG size that can be captured with this CameraDevice.
             characteristics =
                     manager.getCameraCharacteristics(mCameraDevice.getId());
 
-            exposure =characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE).getUpper();//gets the upper exposure time suported by the camera object TODO
+            exposure = characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE).getUpper();//gets the upper exposure time suported by the camera object TODO
             //exposure = exposure - Long.valueOf((long)10000);//reduces the exposure slightly inorder to prevent errors. Will try without. seems to be working without
-            if(DEBUG)Log.i("tag", characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE) + "");
+            if (DEBUG) Log.i("tag", characteristics.get(SENSOR_INFO_EXPOSURE_TIME_RANGE) + "");
             Size[] jpegSizes = null;
             if (characteristics != null) {
                 jpegSizes = characteristics
@@ -654,7 +672,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             if (jpegSizes != null && 0 < jpegSizes.length) {
                 width = jpegSizes[0].getWidth();
                 height = jpegSizes[0].getHeight();
-                if(DEBUG)Log.i("tag",width+","+height);
+                if (DEBUG) Log.i("tag", width + "," + height);
             }
 
             // We use an ImageReader to get a JPEG from CameraDevice.
@@ -670,19 +688,20 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
             // This is the CaptureRequest.Builder that we use to take a picture.
             captureBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
-            captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,CONTROL_AE_MODE_OFF);
+            captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CONTROL_AE_MODE_OFF);
             captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, exposure); //TODO reenable this
-            captureBuilder.set(CaptureRequest.NOISE_REDUCTION_MODE,CaptureRequest.NOISE_REDUCTION_MODE_OFF);
-            captureBuilder.set(CaptureRequest.BLACK_LEVEL_LOCK,false);// without it unlocked it might cause issues
+            captureBuilder.set(CaptureRequest.NOISE_REDUCTION_MODE, CaptureRequest.NOISE_REDUCTION_MODE_OFF);
+            captureBuilder.set(CaptureRequest.BLACK_LEVEL_LOCK, false);// without it unlocked it might cause issues
             Range<Integer> sensitivity = characteristics.get(SENSOR_INFO_SENSITIVITY_RANGE);
-            captureBuilder.set(CaptureRequest.SENSOR_SENSITIVITY,  characteristics.get(SENSOR_MAX_ANALOG_SENSITIVITY) );// TODO this should also be done in the claibrator but saved forever. This just looked nice for the nexus 5.... this must be less than SENSOR_MAX_ANALOG_SENSITIVITY
-            if(DEBUG)Log.i("max analog sensitivity" ,""+characteristics.get(SENSOR_MAX_ANALOG_SENSITIVITY));
-            captureBuilder.set(CaptureRequest.JPEG_QUALITY, Byte.valueOf(100+""));
-            if(DEBUG)Log.i("tag",(1/(exposure.doubleValue()*.000000001))+" <= exposure");
+            captureBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, characteristics.get(SENSOR_MAX_ANALOG_SENSITIVITY));// TODO this should also be done in the claibrator but saved forever. This just looked nice for the nexus 5.... this must be less than SENSOR_MAX_ANALOG_SENSITIVITY
+            if (DEBUG)
+                Log.i("max analog sensitivity", "" + characteristics.get(SENSOR_MAX_ANALOG_SENSITIVITY));
+            captureBuilder.set(CaptureRequest.JPEG_QUALITY, Byte.valueOf(100 + ""));
+            if (DEBUG) Log.i("tag", (1 / (exposure.doubleValue() * .000000001)) + " <= exposure");
 
             surface = reader.getSurface();
-            if(!surface.isValid()){
-                if(DEBUG)Log.i("tag","invalid surface");
+            if (!surface.isValid()) {
+                if (DEBUG) Log.i("tag", "invalid surface");
                 return;
             }
             captureBuilder.addTarget(reader.getSurface());
@@ -694,32 +713,31 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation));
 
 
-
             // This listener is called when a image is ready in ImageReader
             readerListener = new ImageReader.OnImageAvailableListener() {
                 @Override
                 public void onImageAvailable(ImageReader reader) {
-                    go=true;// this will tell our thread that we are ready to take a nother photo. This
-                            // is not the most efficiant way to handle this because the camera takes a photo
-                            // and it takes a lil bit before this is called. OnImageCapture or somthing similar should be used!
+                    go = true;// this will tell our thread that we are ready to take a nother photo. This
+                    // is not the most efficiant way to handle this because the camera takes a photo
+                    // and it takes a lil bit before this is called. OnImageCapture or somthing similar should be used!
 
                     try {
 
                         image = reader.acquireLatestImage();//Pulls your image from the image reader
 
                         buffer = image.getPlanes()[0].getBuffer();//Each image has diffrent plains you have to pull from the first plain aka index of 0
-                         bytes = new byte[buffer.capacity()];
+                        bytes = new byte[buffer.capacity()];
 
                         buffer.get(bytes);
                         //we do not want to save here anymore because it just causes efficancy issues
                         //save(bytes);
 
                         done++;//this is a gobal counter that will allow us to find out how many frames we have captured
-                        changed=true;
+                        changed = true;
 
-                        if(DEBUG)Log.i("tag","Passed Image");
+                        if (DEBUG) Log.i("tag", "Passed Image");
                         /////////////////////////////////////////////////////////////////////
-                       try {//  THIS IS ONLY FOR TESTING OF THE IMAGE FILTER THIS MUST BE REMOVED BEFORE DISTROBUTION TODO
+                        try {//  THIS IS ONLY FOR TESTING OF THE IMAGE FILTER THIS MUST BE REMOVED BEFORE DISTROBUTION TODO
                             save(bytes);
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -728,37 +746,36 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
                         ////////////////////////////////////////////////////////////////////
                         //calibrating=false;
-                       if (calibrating) {
+                        if (calibrating) {
 
                             calibrater.setImage(bytes);
 
                         }
-                        if(DEBUG)Log.i("whats up",calibrating+"");
-                        if(!calibrating)
+                        if (DEBUG) Log.i("whats up", calibrating + "");
+                        if (!calibrating)
                             processor.setImage(bytes);//starts the data processor/ sends it the bytes
 
 
                         //after capture clean up to prevent memory leaks
                         buffer.clear();//try to fix the buffer abandonding
-                        buffer=null;
+                        buffer = null;
                         image.close();
-                        bytes=null;
+                        bytes = null;
 
-                        if(surface!=null)
+                        if (surface != null)
                             surface.release();
-                        surface=null;
-                        if(DEBUG)Log.i("tag","surface released");
+                        surface = null;
+                        if (DEBUG) Log.i("tag", "surface released");
                         reader.close();//added because it seems to be wanting to overload the reader.
-
 
 
                     } finally {
                         if (image != null) {
 
                             // just to make sure!
-                            image=null;
+                            image = null;
 
-                            if(DEBUG)Log.i("tag","done on this run="+(done-initial));
+                            if (DEBUG) Log.i("tag", "done on this run=" + (done - initial));
                         }
                     }
                 }
@@ -766,52 +783,51 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                 private void save(byte[] bytes) throws IOException {
                     // this is to make the name for the file when we save it also does all the formating
                     try {
-                        if(DEBUG)Log.i("tag","saving in all images");
+                        if (DEBUG) Log.i("tag", "saving in all images");
                         Calendar c = Calendar.getInstance();
                         int year = c.get(Calendar.YEAR);
-                        int month= c.get(Calendar.MONTH)+1;
-                        int day= (c.get(Calendar.DAY_OF_MONTH));
-                        int hour= c.get(Calendar.HOUR_OF_DAY);
-                        int min= c.get(Calendar.MINUTE);
+                        int month = c.get(Calendar.MONTH) + 1;
+                        int day = (c.get(Calendar.DAY_OF_MONTH));
+                        int hour = c.get(Calendar.HOUR_OF_DAY);
+                        int min = c.get(Calendar.MINUTE);
                         int seconds = c.get(Calendar.SECOND);
 
                         //string convertion
-                        String Month = month+"";
-                        String Day = day+"";
-                        String Hour = hour+"";
-                        String Min= min+"";
-                        String Seconds = seconds +"";
+                        String Month = month + "";
+                        String Day = day + "";
+                        String Hour = hour + "";
+                        String Min = min + "";
+                        String Seconds = seconds + "";
 
 
                         //keeps it in the correct formate
-                        if(month<10)
-                            Month = "0"+ month;
-                        if(day<10)
-                            Day = "0"+day;
-                        if(hour <10)
-                            Hour = "0"+hour;
-                        if(min<10)
-                            Min="0"+min;
-                        if(seconds <10)
-                            Seconds = "0"+seconds;
+                        if (month < 10)
+                            Month = "0" + month;
+                        if (day < 10)
+                            Day = "0" + day;
+                        if (hour < 10)
+                            Hour = "0" + hour;
+                        if (min < 10)
+                            Min = "0" + min;
+                        if (seconds < 10)
+                            Seconds = "0" + seconds;
 
                         //setting formate for file name
-                        String pic =""+ year+Month+Day+"_"+Hour+Min+Seconds;
+                        String pic = "" + year + Month + Day + "_" + Hour + Min + Seconds;
                         // bellow starts the file path creation
 
-                        File file = new File(Environment.getExternalStorageDirectory(),"DECO/AllSamples");
+                        File file = new File(Environment.getExternalStorageDirectory(), "DECO/AllSamples");
                         //^^ sets up for new directory check
-                        if(!file.exists()){
+                        if (!file.exists()) {
                             file.mkdirs();// if the directory doesnt exist this will make it.
                         }
                         // creates the file to be output
-                        file = new File(Environment.getExternalStorageDirectory(),"DECO/AllSamples/"+pic+ ".jpg");
+                        file = new File(Environment.getExternalStorageDirectory(), "DECO/AllSamples/" + pic + ".jpg");
                         output = new FileOutputStream(file);
                         output.write(bytes);
                         output.flush();
                         output.close();
-                        output=null;
-
+                        output = null;
 
 
                     } finally {
@@ -825,7 +841,7 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
             // We create a Handler since we want to handle the result JPEG in a background thread
 
-            if(thread!=null)
+            if (thread != null)
                 thread.quit();
 
             thread = new HandlerThread("CameraPicture");
@@ -876,9 +892,8 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
             );
 
-            manager=null;
-            characteristics=null;
-
+            manager = null;
+            characteristics = null;
 
 
         } catch (CameraAccessException e) {
@@ -886,18 +901,17 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
         }
 
 
-
-
     }
+
     DataProcessor processor = new DataProcessor();
     Calibrate calibrater = new Calibrate();
 
 
-    public void startStop(){
+    public void startStop() {
 
         if (run == false) {
-            if(!go)
-                go=true;
+            if (!go)
+                go = true;
 
             run = true;
             buttonStart.setText("STOP");
@@ -905,25 +919,24 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
 
             textStatus.setText(" Calibrating");
             textStatus.setTextColor(Color.GREEN);
-            Toast.makeText(getActivity(),"Starting Data Collection",Toast.LENGTH_LONG).show();
-            if(running==0) {
+            Toast.makeText(getActivity(), "Starting Data Collection", Toast.LENGTH_LONG).show();
+            if (running == 0) {
 
                 runner.start();
                 startUiUpdateThread();
                 processor.start();
                 calibrater.start();
 
-                running=1;
+                running = 1;
             }
-            if(!runner.isAlive()){
+            if (!runner.isAlive()) {
                 runner.start();
             }
 
-        }
-        else if (run==true){
+        } else if (run == true) {
             buttonStart.setText("START");
-            run=false;
-            Toast.makeText(getActivity(),"Stopped",Toast.LENGTH_LONG).show();
+            run = false;
+            Toast.makeText(getActivity(), "Stopped", Toast.LENGTH_LONG).show();
             textStatus.setText(" STOPPED");
             textStatus.setTextColor(Color.RED);
 
@@ -939,8 +952,46 @@ public class Camera2BasicFragment extends Fragment  implements View.OnClickListe
                 startStop();
             }
 
+            case R.id.toggleAutoOn: {
+                if (AutoCal.isChecked()) {
+                    calibrating = false;
+                    ButtonConfig.setVisibility(View.VISIBLE);
+                    Editscale.setVisibility(View.VISIBLE);
+                    Editr1.setVisibility(View.VISIBLE);
+                    Editr2.setVisibility(View.VISIBLE);
+                    Editg1.setVisibility(View.VISIBLE);
+                    Editg2.setVisibility(View.VISIBLE);
+                    Editb1.setVisibility(View.VISIBLE);
+                    Editb2.setVisibility(View.VISIBLE);
+
+                }
+                if (!AutoCal.isChecked()) {
+                    calibrating = true;
+                    ButtonConfig.setVisibility(View.INVISIBLE);
+                    Editscale.setVisibility(View.INVISIBLE);
+                    Editr1.setVisibility(View.INVISIBLE);
+                    Editr2.setVisibility(View.INVISIBLE);
+                    Editg1.setVisibility(View.INVISIBLE);
+                    Editg2.setVisibility(View.INVISIBLE);
+                    Editb1.setVisibility(View.INVISIBLE);
+                    Editb2.setVisibility(View.INVISIBLE);
+
+                }
+
+            }
+
+            case R.id.buttonConfig: {
+                DataProcessor.scaleX = Integer.parseInt(Editscale.getText().toString());
+
+                DataProcessor.rThresh = Integer.parseInt(Editr1.getText().toString());
+                DataProcessor.gThresh = Integer.parseInt(Editg1.getText().toString());
+                DataProcessor.bThresh = Integer.parseInt(Editb1.getText().toString());
+                DataProcessor.r2Thresh = Integer.parseInt(Editr2.getText().toString());
+                DataProcessor.g2Thresh = Integer.parseInt(Editg2.getText().toString());
+                DataProcessor.b2Thresh = Integer.parseInt(Editb2.getText().toString());
 
 
+            }
 
             break;
 
