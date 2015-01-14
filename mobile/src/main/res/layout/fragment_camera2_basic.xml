@@ -116,15 +116,14 @@
         android:scaleType="fitXY"
         android:cropToPadding="false" />
 
-    <ToggleButton
+    <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="New ToggleButton"
+        android:text="On"
         android:id="@+id/toggleAutoOn"
         android:layout_below="@+id/textAutoCal"
         android:layout_centerHorizontal="true"
-        android:textOff="Off"
-        android:textOn="On"
+
         android:enabled="true"
         android:checked="true" />
 
@@ -151,7 +150,7 @@
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:inputType="number"
+        android:inputType="number|text"
         android:ems="10"
         android:id="@+id/editr1"
         android:layout_below="@+id/toggleAutoOn"
@@ -166,7 +165,7 @@
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:inputType="number"
+        android:inputType="number|text"
         android:ems="10"
         android:id="@+id/editg1"
         android:shadowColor="#ffffffff"
@@ -180,7 +179,7 @@
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:inputType="number"
+        android:inputType="number|text"
         android:ems="10"
         android:id="@+id/editb1"
         android:shadowColor="#ffffffff"
@@ -194,7 +193,7 @@
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:inputType="number"
+        android:inputType="number|text"
         android:ems="10"
         android:id="@+id/editr2"
         android:shadowColor="#ffffffff"
@@ -208,7 +207,7 @@
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:inputType="number"
+        android:inputType="number|text"
         android:ems="10"
         android:id="@+id/editg2"
         android:shadowColor="#ffffffff"
@@ -222,7 +221,7 @@
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:inputType="number"
+        android:inputType="number|text"
         android:ems="10"
         android:id="@+id/editb2"
         android:shadowColor="#ffffffff"
@@ -236,7 +235,7 @@
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:inputType="number"
+        android:inputType="number|text"
         android:ems="10"
         android:id="@+id/editScale"
         android:shadowColor="#ffffffff"
@@ -245,7 +244,8 @@
         android:layout_alignParentStart="true"
         android:layout_alignEnd="@+id/editb2"
         android:layout_marginTop="20dp"
-        android:text="Fast Scale" />
+        android:text="Fast Scale"
+        android:phoneNumber="false" />
 
 
 </RelativeLayout>
