@@ -116,14 +116,15 @@
         android:scaleType="fitXY"
         android:cropToPadding="false" />
 
-    <Button
+    <ToggleButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="On"
         android:id="@+id/toggleAutoOn"
         android:layout_below="@+id/textAutoCal"
         android:layout_centerHorizontal="true"
-
+        android:textOff="Off"
+        android:textOn="On"
         android:enabled="true"
         android:checked="true" />
 
@@ -138,14 +139,6 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:phoneNumber="true" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Set Config"
-        android:id="@+id/buttonConfig"
-        android:layout_below="@+id/textAutoCal"
-        android:layout_toEndOf="@+id/toggleAutoOn" />
 
     <EditText
         android:layout_width="wrap_content"

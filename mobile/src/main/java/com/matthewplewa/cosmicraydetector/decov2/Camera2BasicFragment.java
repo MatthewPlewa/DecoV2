@@ -59,6 +59,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -137,7 +138,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
     ImageView CroppedImage;
     Button buttonStart;
     Button ButtonConfig;
-    Button AutoCal;
+    ToggleButton AutoCal;
     EditText Editr1, Editr2, Editb1, Editb2, Editg1, Editg2, Editscale;
 
     CaptureRequest.Builder captureBuilder;
@@ -404,8 +405,8 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
         textStatus = (TextView) getView().findViewById(R.id.textStatus);
         textQueue = (TextView) getView().findViewById(R.id.textQueue);
         CroppedImage = (ImageView) getView().findViewById(R.id.imageCropped);
-        AutoCal = (Button) getView().findViewById(R.id.toggleAutoOn);
-        ButtonConfig = (Button) getView().findViewById(R.id.buttonConfig);
+        AutoCal = (ToggleButton) getView().findViewById(R.id.toggleAutoOn);
+
         Editb1 = (EditText) getView().findViewById(R.id.editb1);
         Editr1 = (EditText) getView().findViewById(R.id.editr1);
         Editg1 = (EditText) getView().findViewById(R.id.editg1);
@@ -422,7 +423,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
 
             Log.i("tag", "onclick set");
         }
-        ButtonConfig.setVisibility(View.INVISIBLE);
+
         Editscale.setVisibility(View.INVISIBLE);
         Editr1.setVisibility(View.INVISIBLE);
         Editr2.setVisibility(View.INVISIBLE);
@@ -942,31 +943,28 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
         }
 
     }
-    boolean autocal=true;
+
     @Override
     public void onClick(View view) {// will have the button itself trigger the onclick
 
         switch (view.getId()) {
             case R.id.buttonPicture: {
-                if(!autocal) {
-                    Log.i("tag", "button config activeated");
-                    DataProcessor.scaleX = Integer.parseInt(Editscale.getText().toString());
 
+                if(!AutoCal.isChecked()){
+                    DataProcessor.scaleX = Integer.parseInt(Editscale.getText().toString());
                     DataProcessor.rThresh = Integer.parseInt(Editr1.getText().toString());
                     DataProcessor.gThresh = Integer.parseInt(Editg1.getText().toString());
                     DataProcessor.bThresh = Integer.parseInt(Editb1.getText().toString());
                     DataProcessor.r2Thresh = Integer.parseInt(Editr2.getText().toString());
                     DataProcessor.g2Thresh = Integer.parseInt(Editg2.getText().toString());
                     DataProcessor.b2Thresh = Integer.parseInt(Editb2.getText().toString());
+                    Log.i("here", DataProcessor.scaleX+DataProcessor.rThresh+"");
                 }
                 startStop();
             }
 
             case R.id.toggleAutoOn: {
-
-                if (autocal) {
-                    autocal=false;
-                    AutoCal.setText("Off");
+                if (!AutoCal.isChecked()) {
                     calibrating = false;
 
                     Editscale.setVisibility(View.VISIBLE);
@@ -976,13 +974,11 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
                     Editg2.setVisibility(View.VISIBLE);
                     Editb1.setVisibility(View.VISIBLE);
                     Editb2.setVisibility(View.VISIBLE);
+                    Log.i("tag",""+ AutoCal.isChecked());
 
                 }
-                if (!autocal) {
-                    AutoCal.setText("On");
-                    autocal=true;
+                if (AutoCal.isChecked()) {
                     calibrating = true;
-                    ButtonConfig.setVisibility(View.INVISIBLE);
                     Editscale.setVisibility(View.INVISIBLE);
                     Editr1.setVisibility(View.INVISIBLE);
                     Editr2.setVisibility(View.INVISIBLE);
@@ -995,7 +991,18 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
 
             }
 
-            
+           /* case R.id.buttonConfig: {
+                DataProcessor.scaleX = Integer.parseInt(Editscale.getText().toString());
+
+                DataProcessor.rThresh = Integer.parseInt(Editr1.getText().toString());
+                DataProcessor.gThresh = Integer.parseInt(Editg1.getText().toString());
+                DataProcessor.bThresh = Integer.parseInt(Editb1.getText().toString());
+                DataProcessor.r2Thresh = Integer.parseInt(Editr2.getText().toString());
+                DataProcessor.g2Thresh = Integer.parseInt(Editg2.getText().toString());
+                DataProcessor.b2Thresh = Integer.parseInt(Editb2.getText().toString());
+
+
+            }*/
 
             break;
 

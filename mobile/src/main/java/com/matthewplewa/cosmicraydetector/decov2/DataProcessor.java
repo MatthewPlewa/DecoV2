@@ -311,8 +311,7 @@ public class DataProcessor extends Thread {
                 r= Color.red(pixel);
                 g= Color.green(pixel);
                 b= Color.blue(pixel);
-                int a = Color.alpha(pixel);
-                Log.i("tag", a+"");
+
 
 
                 if (r > rThresh||b>bThresh||g>gThresh ) {
