@@ -430,11 +430,11 @@ public class DataProcessor extends Thread {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            try {
+            /*try {
                 saveNCrop(map,x1,y1);
             } catch (IOException e) {
                 e.printStackTrace();
-            }
+            }*/
         }
         longProcess=false;
 

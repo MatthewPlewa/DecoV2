@@ -263,8 +263,8 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
                                 runner.start();
                             }
 
-                            if (newCropped = true)
-                                CroppedImage.setImageBitmap(croped);
+                            //if (newCropped = true)
+                              //  CroppedImage.setImageBitmap(croped);
 
                             if (!calibrating) {
                                 textStatus.setText(" Running");
