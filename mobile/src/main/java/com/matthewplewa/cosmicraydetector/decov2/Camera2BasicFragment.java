@@ -222,7 +222,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
                     startPreview();//start the preview here because take picture requires a running preview
 
                     try {
-                        Thread.sleep(100);// need to make this listen for the picture to be taken
+                        Thread.sleep(300);// need to make this listen for the picture to be taken
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -683,7 +683,11 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
             outputSurfaces.add(new Surface(mTextureView.getSurfaceTexture()));
 
 
-//TODO in here i want to make sure that it will work for legacy extentions!!!!!!!!!!!!
+            //TODO in here i want to make sure that it will work for legacy extentions!!!!!!!!!!!!
+
+            /*
+            To make this compatible we have to check to make sure that the phones hardwear is compatible with v2
+             */
 
 
             // This is the CaptureRequest.Builder that we use to take a picture.
@@ -737,15 +741,15 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
 
                         if (DEBUG) Log.i("tag", "Passed Image");
                         /////////////////////////////////////////////////////////////////////
-                        try {//  THIS IS ONLY FOR TESTING OF THE IMAGE FILTER THIS MUST BE REMOVED BEFORE DISTROBUTION TODO
-                            save(bytes);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        //try {//  THIS IS ONLY FOR TESTING OF THE IMAGE FILTER THIS MUST BE REMOVED BEFORE DISTROBUTION TODO
+                        //    save(bytes);
+                        //} catch (IOException e) {
+                        //   e.printStackTrace();
+                        //}
 
 
                         ////////////////////////////////////////////////////////////////////
-                        //calibrating=false;
+
                         if (calibrating) {
 
                             calibrater.setImage(bytes);
@@ -757,6 +761,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
 
 
                         //after capture clean up to prevent memory leaks
+
                         buffer.clear();//try to fix the buffer abandonding
                         buffer = null;
                         image.close();
