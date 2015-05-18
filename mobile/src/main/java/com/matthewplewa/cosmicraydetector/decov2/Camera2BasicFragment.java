@@ -184,15 +184,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
 
             boolean tr = true;
             while (tr) {
-                if (restarted) {
-                    try {
-                        Thread.sleep(5000);//this will fix all the problems with it not being ready when it starts;
-                        restarted = false;
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
 
-                    }
-                }
 
                 while (!go || !run) {
                     try {
@@ -459,8 +451,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
             initial = tall[0];
 
             numEvents = tall[1];
-            if (tall[2] == 1)
-                restarted = true;
+
 
             //view.findViewById(R.id.info).setOnClickListener(this);
         }
@@ -521,10 +512,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
             Toast.makeText(activity, "Cannot access the camera.", Toast.LENGTH_SHORT).show();
             activity.finish();
         }
-        if (restarted) {
-            startStop();
 
-        }
 
     }
 
