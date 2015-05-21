@@ -430,6 +430,8 @@ public class DataProcessor extends Thread {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
+            // TODO the crop function for some reason is still pulling out of the image bounds.
             /*try {
                 saveNCrop(map,x1,y1);
             } catch (IOException e) {

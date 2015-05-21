@@ -689,7 +689,7 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
             if (DEBUG)
                 Log.i("max analog sensitivity", "" + characteristics.get(SENSOR_MAX_ANALOG_SENSITIVITY));
             captureBuilder.set(CaptureRequest.JPEG_QUALITY, Byte.valueOf(100 + ""));
-            if (DEBUG) Log.i("tag", (1 / (exposure.doubleValue() * .000000001)) + " <= exposure");
+            if (DEBUG) Log.i("tag", ((exposure.doubleValue() * .000000001)) + " <= exposure");
 
             surface = reader.getSurface();
             if (!surface.isValid()) {
